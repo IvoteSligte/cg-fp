@@ -16,6 +16,33 @@ const GLfloat QUAD_VERTICES[] = {
     1.0, -1.0
 };
 
+// mirrored with frag.glsl
+struct Voxel {
+    // bit 0 set indicates that the voxel exists
+    uint32_t flags;
+};
+
+// mirrored with frag.glsl
+// size of the voxel chunk in one dimension
+const long CHUNK_SIZE = 32;
+
+struct Chunk {
+    Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+
+    void init()
+    {
+        for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
+            for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
+                for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
+                    voxels[x][y][z] = {
+                        .flags = ((y + (z & 1)) & 1),
+                    };
+                }
+            }
+        }
+    }
+};
+
 bool readFile(const char* path, std::string& out)
 {
     std::ifstream file(path);
@@ -57,6 +84,12 @@ GLuint loadShader(GLenum type, const char* path)
     return id;
 }
 
+void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar* message, const void* userParam)
+{
+    std::cout << "OpenGL error: " << message << std::endl;
+}
+
 class GLState {
 public:
     GLState()
@@ -65,8 +98,15 @@ public:
 
     bool init()
     {
+        chunk.init();
+
         std::cout << "Initializing OpenGL." << std::endl;
-        // TODO: error handling
+        // TODO: error handling (with gllsBuffers for buffers)
+
+        // --- debug info ---
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(glDebugCallback, nullptr);
 
         // --- full screen quad ---
         glGenVertexArrays(1, &vertexArray);
@@ -80,6 +120,13 @@ public:
         // each element is 2 times GL_FLOAT since each vec2 is two GL_FLOATs
         glVertexAttribPointer(posAttr, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
         glEnableVertexAttribArray(posAttr);
+
+        // --- storage buffer ---
+        const int STORAGE_BUFFER_BINDING = 0;
+        glGenBuffers(1, &storageBuffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
+        glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, NULL);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
 
         // --- shaders ---
         vertexShader = loadShader(GL_VERTEX_SHADER, "vert.glsl");
@@ -108,6 +155,8 @@ public:
             glDeleteBuffers(1, &vertexBuffer);
         if (vertexArray)
             glDeleteVertexArrays(1, &vertexArray);
+        if (storageBuffer)
+            glDeleteBuffers(1, &storageBuffer);
     }
 
     void update()
@@ -116,16 +165,18 @@ public:
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        glBindVertexArray(vertexArray);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
 private:
+    Chunk chunk;
+
     GLuint shaderProgram = 0;
     GLuint vertexShader = 0;
     GLuint fragmentShader = 0;
     GLuint vertexBuffer = 0;
     GLuint vertexArray = 0;
+    GLuint storageBuffer = 0;
 };
 
 void log_sdl_error(std::string msg)
