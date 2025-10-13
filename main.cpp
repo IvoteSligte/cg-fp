@@ -3,6 +3,8 @@
 #include <SDL2/SDL_timer.h>
 #include <algorithm>
 #include <cassert>
+#include <glm/ext/quaternion_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
 #include <unordered_set>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -19,6 +21,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
+const glm::vec3 FORWARD = glm::vec3(0.0, 0.0, 1.0);
+const glm::vec3 RIGHT = glm::vec3(1.0, 0.0, 0.0);
+const glm::vec3 UP = glm::vec3(0.0, 1.0, 0.0);
 
 const GLfloat QUAD_VERTICES[] = {
     -1.0, -1.0,
@@ -108,6 +114,7 @@ void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* mess
 struct InputState {
     std::unordered_set<SDL_Keycode> pressed = {};
     std::unordered_set<SDL_Keycode> held = {};
+    glm::vec2 mouseDelta = glm::vec2(0.0);
 
     bool isPressed(SDL_KeyCode key)
     {
@@ -192,24 +199,28 @@ public:
 
     void update(InputState& inputs, float deltaTime)
     {
-        const float SPEED = 0.01;
-        float delta = SPEED * deltaTime;
+        const float MOVEMENT_SPEED = 1.0;
+        const float ROTATE_SPEED = 1.0;
+        float moveDelta = MOVEMENT_SPEED * deltaTime;
+        float rotateDelta = ROTATE_SPEED * deltaTime;
 
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (inputs.isHeld(SDLK_w)) {
-            position += rotation * glm::vec3(0.0, 0.0, 1.0) * delta;
+            position += rotation * FORWARD * moveDelta;
         }
         if (inputs.isHeld(SDLK_s)) {
-            position += rotation * glm::vec3(0.0, 0.0, -1.0) * delta;
+            position += rotation * -FORWARD * moveDelta;
         }
         if (inputs.isHeld(SDLK_d)) {
-            position += rotation * glm::vec3(1.0, 0.0, 0.0) * delta;
+            position += rotation * RIGHT * moveDelta;
         }
         if (inputs.isHeld(SDLK_a)) {
-            position += rotation * glm::vec3(-1.0, 0.0, 0.0) * delta;
+            position += rotation * -RIGHT * moveDelta;
         }
+        rotation = glm::rotate(rotation, inputs.mouseDelta.x * rotateDelta, UP);
+        rotation = glm::rotate(rotation, inputs.mouseDelta.y * rotateDelta, RIGHT);
 
         std::cout << "Position: " << position << std::endl;
         std::cout << "Rotation: " << rotation << std::endl;
@@ -217,14 +228,14 @@ public:
         // TODO: update position and rotation (using SDL)
         glUseProgram(shaderProgram);
         glUniform3fv(glGetUniformLocation(shaderProgram, "position"), 1, glm::value_ptr(position));
-        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(rotation));
+        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(glm::mat3_cast(rotation)));
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
 private:
     Chunk chunk;
     glm::vec3 position;
-    glm::mat3 rotation;
+    glm::quat rotation;
 
     GLuint shaderProgram = 0;
     GLuint vertexShader = 0;
@@ -277,6 +288,8 @@ public:
         std::cout << "Initialization finished.\n"
                   << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+
         if (!glState.init())
             return false;
 
@@ -301,13 +314,20 @@ public:
         bool running = true;
 
         while (running) {
+            // get deltaTime
             last = now;
             now = SDL_GetPerformanceCounter();
-            double deltaTime = (double)((now - last) * 1000) / SDL_GetPerformanceFrequency();
+            float deltaTime = (double)((now - last) * 1000) / SDL_GetPerformanceFrequency();
 
-            // add inputs.pressed to inputs.held
-            inputs.held.merge(inputs.pressed);
+            // get window width/height
+            int width;
+            int height;
+            SDL_GetWindowSize(window, &width, &height);
+
+            // clear inputs for start of frame
+            inputs.held.merge(inputs.pressed); // add pressed to held
             inputs.pressed.clear();
+            inputs.mouseDelta = glm::vec2();
 
             SDL_Event event;
             // go through all events in the queue
@@ -321,7 +341,7 @@ public:
                     inputs.held.erase(event.key.keysym.sym);
                     break;
                 case SDL_MOUSEMOTION:
-                    // TODO:
+                    inputs.mouseDelta = glm::vec2((float)event.motion.xrel / width, (float)event.motion.yrel / height) * deltaTime;
                     break;
                 case SDL_QUIT:
                     running = false;
