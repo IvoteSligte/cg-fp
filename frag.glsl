@@ -13,6 +13,10 @@ struct Voxel {
 // size of the voxel chunk in one dimension
 const uint CHUNK_SIZE = 32;
 
+// NOTE: names used for sync with CPU, do not change
+layout(location = 0) uniform vec3 position;
+layout(location = 1) uniform mat3 rotation;
+
 layout(std430, binding = 0) readonly buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 };
@@ -27,7 +31,7 @@ void main() {
 
     Voxel voxel = voxels[0][index.x][index.y];
     if (bitFlag(voxel.flags, 0)) {
-        color = vec3(1.0);
+        color = vec3(0.1) + position;
     }
 
     fragColor = vec4(color, 1.0);

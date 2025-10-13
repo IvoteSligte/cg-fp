@@ -1,8 +1,21 @@
+// TEMP
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_timer.h>
+#include <algorithm>
+#include <cassert>
+#include <unordered_map>
+#include <unordered_set>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/io.hpp>
+
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/vec3.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -19,12 +32,15 @@ const GLfloat QUAD_VERTICES[] = {
 // mirrored with frag.glsl
 struct Voxel {
     // bit 0 set indicates that the voxel exists
-    uint32_t flags;
+    glm::uint flags;
 };
 
 // mirrored with frag.glsl
 // size of the voxel chunk in one dimension
 const long CHUNK_SIZE = 32;
+
+// mirrored with frag.glsl
+const int STORAGE_BUFFER_BINDING = 0;
 
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
@@ -84,11 +100,25 @@ GLuint loadShader(GLenum type, const char* path)
     return id;
 }
 
-void glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
-    GLsizei length, const GLchar* message, const void* userParam)
+void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
 {
     std::cout << "OpenGL error: " << message << std::endl;
 }
+
+struct InputState {
+    std::unordered_set<SDL_Keycode> pressed = {};
+    std::unordered_set<SDL_Keycode> held = {};
+
+    bool isPressed(SDL_KeyCode key)
+    {
+        return pressed.find(key) != pressed.end();
+    }
+
+    bool isHeld(SDL_KeyCode key)
+    {
+        return held.find(key) != held.end();
+    }
+};
 
 class GLState {
 public:
@@ -99,6 +129,8 @@ public:
     bool init()
     {
         chunk.init();
+        position = glm::vec3(0.0);
+        rotation = glm::mat3(1.0);
 
         std::cout << "Initializing OpenGL." << std::endl;
         // TODO: error handling (with gllsBuffers for buffers)
@@ -122,10 +154,9 @@ public:
         glEnableVertexAttribArray(posAttr);
 
         // --- storage buffer ---
-        const int STORAGE_BUFFER_BINDING = 0;
         glGenBuffers(1, &storageBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
-        glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, NULL);
+        glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
 
         // --- shaders ---
@@ -159,17 +190,41 @@ public:
             glDeleteBuffers(1, &storageBuffer);
     }
 
-    void update()
+    void update(InputState& inputs, float deltaTime)
     {
+        const float SPEED = 0.01;
+        float delta = SPEED * deltaTime;
+
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        if (inputs.isHeld(SDLK_w)) {
+            position += rotation * glm::vec3(0.0, 0.0, 1.0) * delta;
+        }
+        if (inputs.isHeld(SDLK_s)) {
+            position += rotation * glm::vec3(0.0, 0.0, -1.0) * delta;
+        }
+        if (inputs.isHeld(SDLK_d)) {
+            position += rotation * glm::vec3(1.0, 0.0, 0.0) * delta;
+        }
+        if (inputs.isHeld(SDLK_a)) {
+            position += rotation * glm::vec3(-1.0, 0.0, 0.0) * delta;
+        }
+
+        std::cout << "Position: " << position << std::endl;
+        std::cout << "Rotation: " << rotation << std::endl;
+
+        // TODO: update position and rotation (using SDL)
         glUseProgram(shaderProgram);
+        glUniform3fv(glGetUniformLocation(shaderProgram, "position"), 1, glm::value_ptr(position));
+        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(rotation));
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
 private:
     Chunk chunk;
+    glm::vec3 position;
+    glm::mat3 rotation;
 
     GLuint shaderProgram = 0;
     GLuint vertexShader = 0;
@@ -241,16 +296,40 @@ public:
 
     void run()
     {
+        Uint64 last;
+        Uint64 now = SDL_GetPerformanceCounter();
         bool running = true;
 
         while (running) {
+            last = now;
+            now = SDL_GetPerformanceCounter();
+            double deltaTime = (double)((now - last) * 1000) / SDL_GetPerformanceFrequency();
+
+            // add inputs.pressed to inputs.held
+            inputs.held.merge(inputs.pressed);
+            inputs.pressed.clear();
+
             SDL_Event event;
             // go through all events in the queue
             while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT)
+                switch (event.type) {
+                case SDL_KEYDOWN:
+                    inputs.pressed.insert(event.key.keysym.sym);
+                    break;
+                case SDL_KEYUP:
+                    inputs.pressed.erase(event.key.keysym.sym);
+                    inputs.held.erase(event.key.keysym.sym);
+                    break;
+                case SDL_MOUSEMOTION:
+                    // TODO:
+                    break;
+                case SDL_QUIT:
                     running = false;
+                    break;
+                }
             }
-            glState.update();
+
+            glState.update(inputs, deltaTime);
             SDL_GL_SwapWindow(window);
         }
     }
@@ -260,6 +339,7 @@ private:
     SDL_Window* window = nullptr;
     SDL_GLContext glContext = nullptr;
     GLState glState;
+    InputState inputs;
 };
 
 int main()
