@@ -22,7 +22,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/io.hpp>
 
-const glm::vec3 FORWARD = glm::vec3(0.0, 0.0, 1.0);
+const glm::vec3 FORWARD = glm::vec3(0.0, 0.0, -1.0);
 const glm::vec3 RIGHT = glm::vec3(1.0, 0.0, 0.0);
 const glm::vec3 UP = glm::vec3(0.0, 1.0, 0.0);
 
@@ -53,11 +53,15 @@ struct Chunk {
 
     void init()
     {
+        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f + glm::vec3(0.0, 0.0, 8.0);
+
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
+                    glm::vec3 p = glm::vec3(x, y, z);
+
                     voxels[x][y][z] = {
-                        .flags = 1,
+                        .flags = glm::length(p - center) < 5.0 ? 1u : 0u,
                     };
                 }
             }
@@ -116,12 +120,12 @@ struct InputState {
     std::unordered_set<SDL_Keycode> held = {};
     glm::vec2 mouseDelta = glm::vec2(0.0);
 
-    bool isPressed(SDL_KeyCode key)
+    bool isPressed(SDL_Keycode key)
     {
         return pressed.find(key) != pressed.end();
     }
 
-    bool isHeld(SDL_KeyCode key)
+    bool isHeld(SDL_Keycode key)
     {
         return held.find(key) != held.end();
     }
@@ -136,8 +140,6 @@ public:
     bool init()
     {
         chunk.init();
-        position = glm::vec3(0.0);
-        rotation = glm::mat3(1.0);
 
         std::cout << "Initializing OpenGL." << std::endl;
         // TODO: error handling (with gllsBuffers for buffers)
@@ -199,43 +201,52 @@ public:
 
     void update(InputState& inputs, float deltaTime)
     {
-        const float MOVEMENT_SPEED = 1.0;
-        const float ROTATE_SPEED = 0.1;
+        const float MOVEMENT_SPEED = 0.01;
+        const float ROTATE_SPEED = 0.05;
         float moveDelta = MOVEMENT_SPEED * deltaTime;
         float rotateDelta = ROTATE_SPEED * deltaTime;
 
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // reconstruct rotation
+        pitch += -inputs.mouseDelta.y * rotateDelta;
+        yaw += -inputs.mouseDelta.x * rotateDelta;
+        glm::quat yawRotation = glm::angleAxis(yaw, UP);
+        glm::quat pitchRotation = glm::angleAxis(pitch, RIGHT);
+        glm::mat3 rotation = glm::mat3_cast(yawRotation * pitchRotation);
+        glm::vec3 forward = rotation[2];
+        glm::vec3 right = rotation[0];
+        // FIXME: rotations fucked
+
+        // update position
         if (inputs.isHeld(SDLK_w)) {
-            position += rotation * FORWARD * moveDelta;
+            position += forward * moveDelta;
         }
         if (inputs.isHeld(SDLK_s)) {
-            position += rotation * -FORWARD * moveDelta;
+            position += -forward * moveDelta;
         }
         if (inputs.isHeld(SDLK_d)) {
-            position += rotation * RIGHT * moveDelta;
+            position += right * moveDelta;
         }
         if (inputs.isHeld(SDLK_a)) {
-            position += rotation * -RIGHT * moveDelta;
+            position += -right * moveDelta;
         }
-        rotation = glm::rotate(rotation, inputs.mouseDelta.x * rotateDelta, UP);
-        rotation = glm::rotate(rotation, inputs.mouseDelta.y * rotateDelta, RIGHT);
 
-        // std::cout << "Position: " << position << std::endl;
-        // std::cout << "Rotation: " << rotation << std::endl;
+        std::cout << "Position: " << position << std::endl;
+        std::cout << "Rotation: " << rotation << std::endl;
 
-        // TODO: update position and rotation (using SDL)
         glUseProgram(shaderProgram);
         glUniform3fv(glGetUniformLocation(shaderProgram, "position"), 1, glm::value_ptr(position));
-        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(glm::mat3_cast(rotation)));
+        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(rotation));
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
 private:
     Chunk chunk;
-    glm::vec3 position;
-    glm::quat rotation;
+    glm::vec3 position = glm::vec3(0.0f);
+    float pitch = 0.0f;
+    float yaw = 0.0f;
 
     GLuint shaderProgram = 0;
     GLuint vertexShader = 0;
@@ -325,7 +336,7 @@ public:
             SDL_GetWindowSize(window, &width, &height);
 
             // clear inputs for start of frame
-            inputs.held.merge(inputs.pressed); // add pressed to held
+            // inputs.held.merge(inputs.pressed); // add pressed to held
             inputs.pressed.clear();
             inputs.mouseDelta = glm::vec2();
 
@@ -334,7 +345,10 @@ public:
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                 case SDL_KEYDOWN:
-                    inputs.pressed.insert(event.key.keysym.sym);
+                    if (!inputs.isHeld(event.key.keysym.sym)) {
+                        inputs.pressed.insert(event.key.keysym.sym);
+                    }
+                    inputs.held.insert(event.key.keysym.sym);
                     break;
                 case SDL_KEYUP:
                     inputs.pressed.erase(event.key.keysym.sym);

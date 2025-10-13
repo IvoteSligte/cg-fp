@@ -47,15 +47,16 @@ RayCast rayCast(Ray ray) {
     vec3 position = ray.position - CHUNK_MIN;
     int i = 0;
     
-    while (i < 100) {
+    while (i < 100000) {
         i += 1;
+        position += 0.01 * ray.direction;
         ivec3 index = ivec3(round(position));
         Voxel voxel = chunk.voxels[index.x][index.y][index.z];
 
         if (bitFlag(voxel.flags, 0)) {
             return RayCast(true, position + CHUNK_MIN, index);
         }
-        if (any(lessThan(ray.position, vec3(0.0))) || any(greaterThan(ray.position, vec3(CHUNK_SIZE)))) {
+        if (any(lessThan(index, ivec3(0))) || any(greaterThan(index, ivec3(CHUNK_SIZE)))) {
             return RayCast(false, vec3(0.0), ivec3(0));
         }
     }
@@ -65,22 +66,25 @@ void main() {
     vec2 aspectRatio = vec2(1.0); // TODO:
     
     vec2 screenPos = (fragPos * 2.0 - 1.0) * aspectRatio;
-    vec3 direction = rotation * normalize(vec3(screenPos.x, 1.0, screenPos.y));
+    vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, 1.0));
     Ray ray = Ray(position, direction);
 
     // camera is outside chunk
     if (any(lessThan(ray.position, CHUNK_MIN)) || any(greaterThan(ray.position, CHUNK_MAX))) {
         // magenta (indicating error)
         fragColor = vec4(1.0, 0.0, 1.0, 1.0);
+        return;
     }
     RayCast rayCast = rayCast(ray);
     vec3 color = vec3(0.0);
 
     if (rayCast.hit) {
-        color = vec3(1.0, 0.0, 0.0);
-        // color = rayCast.position / CHUNK_SIZE * 0.5 + 0.5;
+        // color = vec3(1.0, 0.0, 0.0);
+        color = rayCast.position / CHUNK_SIZE * 0.5 + 0.5;
     } else {
         color = vec3(0.2, 0.2, 0.7);
     }
+
+    color += 0.3 * (direction * 0.5 + 0.5);
     fragColor = vec4(color, 1.0);
 }
