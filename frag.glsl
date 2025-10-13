@@ -13,8 +13,6 @@ struct Voxel {
 // size of the voxel chunk in one dimension
 const uint CHUNK_SIZE = 32;
 
-const uint FLAG_EXISTS = 1;
-
 // NOTE: names used for sync with CPU, do not change
 layout(location = 0) uniform vec3 position;
 layout(location = 1) uniform mat3 rotation;
@@ -47,12 +45,14 @@ RayCast rayCast(Ray ray) {
     float stepLength = max(max(abs(ray.direction).x, abs(ray.direction).y), abs(ray.direction).z);
     vec3 step = ray.direction / stepLength;
     vec3 position = ray.position - CHUNK_MIN;
+    int i = 0;
     
-    while (true) {
+    while (i < 100) {
+        i += 1;
         ivec3 index = ivec3(round(position));
         Voxel voxel = chunk.voxels[index.x][index.y][index.z];
 
-        if (bitFlag(voxel.flags, FLAG_EXISTS)) {
+        if (bitFlag(voxel.flags, 0)) {
             return RayCast(true, position + CHUNK_MIN, index);
         }
         if (any(lessThan(ray.position, vec3(0.0))) || any(greaterThan(ray.position, vec3(CHUNK_SIZE)))) {

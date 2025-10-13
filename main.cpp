@@ -108,7 +108,7 @@ GLuint loadShader(GLenum type, const char* path)
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
 {
-    std::cout << "OpenGL error: " << message << std::endl;
+    std::cout << "GL: " << message << std::endl;
 }
 
 struct InputState {
