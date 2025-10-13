@@ -1,26 +1,26 @@
-// TEMP
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_timer.h>
-#include <algorithm>
-#include <cassert>
-#include <glm/ext/quaternion_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <unordered_map>
-#include <unordered_set>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/io.hpp>
-
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
+#include <algorithm>
+#include <cassert>
 #include <fstream>
+#include <glm/ext/quaternion_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+
+// TEMP
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/io.hpp>
 
 const glm::vec3 FORWARD = glm::vec3(0.0, 0.0, 1.0);
 const glm::vec3 RIGHT = glm::vec3(1.0, 0.0, 0.0);
@@ -57,7 +57,7 @@ struct Chunk {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
                     voxels[x][y][z] = {
-                        .flags = ((y + (z & 1)) & 1),
+                        .flags = 1,
                     };
                 }
             }
@@ -200,7 +200,7 @@ public:
     void update(InputState& inputs, float deltaTime)
     {
         const float MOVEMENT_SPEED = 1.0;
-        const float ROTATE_SPEED = 1.0;
+        const float ROTATE_SPEED = 0.1;
         float moveDelta = MOVEMENT_SPEED * deltaTime;
         float rotateDelta = ROTATE_SPEED * deltaTime;
 
@@ -222,8 +222,8 @@ public:
         rotation = glm::rotate(rotation, inputs.mouseDelta.x * rotateDelta, UP);
         rotation = glm::rotate(rotation, inputs.mouseDelta.y * rotateDelta, RIGHT);
 
-        std::cout << "Position: " << position << std::endl;
-        std::cout << "Rotation: " << rotation << std::endl;
+        // std::cout << "Position: " << position << std::endl;
+        // std::cout << "Rotation: " << rotation << std::endl;
 
         // TODO: update position and rotation (using SDL)
         glUseProgram(shaderProgram);
