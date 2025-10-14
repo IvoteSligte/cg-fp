@@ -47,9 +47,9 @@ RayCast rayCast(Ray ray) {
     vec3 position = ray.position - CHUNK_MIN;
     int i = 0;
     
-    while (i < 100000) {
+    while (i < 10000) {
         i += 1;
-        position += 0.01 * ray.direction;
+        position += 0.1 * ray.direction;
         ivec3 index = ivec3(round(position));
         Voxel voxel = chunk.voxels[index.x][index.y][index.z];
 
@@ -66,7 +66,7 @@ void main() {
     vec2 aspectRatio = vec2(1.0); // TODO:
     
     vec2 screenPos = (fragPos * 2.0 - 1.0) * aspectRatio;
-    vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, 1.0));
+    vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, -1.0));
     Ray ray = Ray(position, direction);
 
     // camera is outside chunk
@@ -79,7 +79,6 @@ void main() {
     vec3 color = vec3(0.0);
 
     if (rayCast.hit) {
-        // color = vec3(1.0, 0.0, 0.0);
         color = rayCast.position / CHUNK_SIZE * 0.5 + 0.5;
     } else {
         color = vec3(0.2, 0.2, 0.7);

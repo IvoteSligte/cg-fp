@@ -53,7 +53,7 @@ struct Chunk {
 
     void init()
     {
-        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f + glm::vec3(0.0, 0.0, 8.0);
+        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f - glm::vec3(0.0, 0.0, 8.0);
 
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
@@ -202,7 +202,7 @@ public:
     void update(InputState& inputs, float deltaTime)
     {
         const float MOVEMENT_SPEED = 0.01;
-        const float ROTATE_SPEED = 0.05;
+        const float ROTATE_SPEED = 0.01;
         float moveDelta = MOVEMENT_SPEED * deltaTime;
         float rotateDelta = ROTATE_SPEED * deltaTime;
 
@@ -213,11 +213,10 @@ public:
         pitch += -inputs.mouseDelta.y * rotateDelta;
         yaw += -inputs.mouseDelta.x * rotateDelta;
         glm::quat yawRotation = glm::angleAxis(yaw, UP);
-        glm::quat pitchRotation = glm::angleAxis(pitch, RIGHT);
-        glm::mat3 rotation = glm::mat3_cast(yawRotation * pitchRotation);
-        glm::vec3 forward = rotation[2];
-        glm::vec3 right = rotation[0];
-        // FIXME: rotations fucked
+        glm::vec3 right = yawRotation * RIGHT;
+        glm::quat pitchRotation = glm::angleAxis(pitch, right);
+        glm::mat3 rotation = glm::mat3_cast(glm::normalize(pitchRotation * yawRotation));
+        glm::vec3 forward = -rotation[2];
 
         // update position
         if (inputs.isHeld(SDLK_w)) {
@@ -233,12 +232,12 @@ public:
             position += -right * moveDelta;
         }
 
-        std::cout << "Position: " << position << std::endl;
-        std::cout << "Rotation: " << rotation << std::endl;
+        // std::cout << "Position: " << position << std::endl;
+        // std::cout << "Rotation: " << rotation << std::endl;
 
         glUseProgram(shaderProgram);
         glUniform3fv(glGetUniformLocation(shaderProgram, "position"), 1, glm::value_ptr(position));
-        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(rotation));
+        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(glm::inverse(rotation)));
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
