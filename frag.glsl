@@ -4,6 +4,7 @@ in vec2 fragPos;
 out vec4 fragColor;
 
 // mirrored with main.cpp
+// NOTE: order is important due to alignment
 struct Voxel {
     vec3 color;
     // bit 0 set indicates that the voxel exists

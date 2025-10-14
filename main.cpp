@@ -37,6 +37,7 @@ const GLfloat QUAD_VERTICES[] = {
 };
 
 // mirrored with frag.glsl
+// NOTE: order is important due to alignment
 struct Voxel {
     glm::vec3 color;
     // bit 0 set indicates that the voxel exists
