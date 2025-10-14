@@ -13,6 +13,7 @@
 #include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -37,16 +38,24 @@ const GLfloat QUAD_VERTICES[] = {
 
 // mirrored with frag.glsl
 struct Voxel {
+    glm::vec3 color;
     // bit 0 set indicates that the voxel exists
     glm::uint flags;
 };
 
 // mirrored with frag.glsl
 // size of the voxel chunk in one dimension
-const long CHUNK_SIZE = 32;
+const long CHUNK_SIZE = 64;
 
 // mirrored with frag.glsl
 const int STORAGE_BUFFER_BINDING = 0;
+
+float randf()
+{
+    auto gen = std::mt19937(std::random_device {}());
+    auto dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    return dist(gen);
+}
 
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
@@ -61,9 +70,10 @@ struct Chunk {
                     glm::vec3 p = glm::vec3(x, y, z);
 
                     voxels[x][y][z] = {
-                        .flags = glm::length(p - center) < 5.0 ? 1u : 0u,
+                        .color = glm::vec3(randf(), randf(), randf()),
+                        .flags = glm::length(p - center) > 20.0 ? 1u : 0u,
                     };
-                }
+                };
             }
         }
     }
