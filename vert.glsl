@@ -1,3 +1,4 @@
+// vertex shader
 #version 430
 
 in vec2 inPos;

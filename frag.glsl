@@ -1,3 +1,4 @@
+// fragment shader
 #version 430
 
 in vec2 fragPos;
@@ -6,7 +7,9 @@ out vec4 fragColor;
 // mirrored with main.cpp
 // NOTE: order is important due to alignment
 struct Voxel {
-    vec3 color;
+    vec3 emission;
+    uint _padding0;
+    vec3 diffuse;
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -15,13 +18,13 @@ struct Voxel {
 // size of the voxel chunk in one dimension
 const uint CHUNK_SIZE = 32;
 
-// NOTE: names used for sync with CPU, do not change
-layout(location = 0) uniform vec3 position;
-layout(location = 1) uniform mat3 rotation;
-
 layout(std430, binding = 0) readonly buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
+
+// NOTE: names used for sync with CPU, do not change
+layout(location = 0) uniform vec3 position;
+layout(location = 1) uniform mat3 rotation;
 
 bool bitFlag(uint flags, uint index) {
     return (flags & (1u << index)) == 1u;
@@ -120,11 +123,9 @@ void main() {
 
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
-        color = chunk.voxels[index.x][index.y][index.z].color;
+        color = chunk.voxels[index.x][index.y][index.z].emission;
     } else {
         color = vec3(0.2, 0.2, 0.7);
     }
-
-    color += 0.3 * (direction * 0.5 + 0.5);
     fragColor = vec4(color, 1.0);
 }

@@ -39,9 +39,11 @@ const GLfloat QUAD_VERTICES[] = {
 // mirrored with frag.glsl
 // NOTE: order is important due to alignment
 struct Voxel {
-    glm::vec3 color;
+    glm::vec3 emission;
+    uint _padding0;
+    glm::vec3 diffuse;
     // bit 0 set indicates that the voxel exists
-    glm::uint flags;
+    uint flags;
 };
 
 // mirrored with frag.glsl
@@ -72,7 +74,9 @@ struct Chunk {
                     glm::vec3 p = glm::vec3(x, y, z);
 
                     voxels[x][y][z] = {
-                        .color = glm::vec3(randf(), randf(), randf()),
+                        .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
+                        ._padding0 = 0,
+                        .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
                         .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
                     };
                 };
