@@ -23,10 +23,29 @@ layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
+int offset(uint a, int b) {
+    return int(mod(a + b, CHUNK_SIZE));
+}
+
 void main() {
     uvec3 index = gl_GlobalInvocationID;
+    vec3 emission = chunk.voxels[index.x][index.y][index.z].emission;
+    vec3 color = uintBitsToFloat(chunk.voxels[index.x][index.y][index.z].color);
+    color = max(color, emission);
 
-    chunk.voxels[index.x][index.y][index.z].color = uvec3(1);
+    for (int x = -1; x <= 1; x += 1) {
+        for (int y = -1; y <= 1; y += 1) {
+            for (int z = -1; z <= 1; z += 1) {
+                vec3 nbColor = uintBitsToFloat(chunk.voxels[offset(index.x, 1)][offset(index.y, 1)][offset(index.z, 1)].color);
+                color = mix(color, nbColor, 0.0001);
+            }
+        }
+    }
+
+    uvec3 uColor = floatBitsToUint(color);
+    for (int i = 0; i < 3; i++) {
+        atomicExchange(chunk.voxels[index.x][index.y][index.z].color[i], uColor[i]);
+    }
 
     // TODO:
 }

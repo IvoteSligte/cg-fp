@@ -126,7 +126,7 @@ void main() {
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
         color = chunk.voxels[index.x][index.y][index.z].emission;
-        color = vec3(chunk.voxels[index.x][index.y][index.z].color);
+        color = uintBitsToFloat(chunk.voxels[index.x][index.y][index.z].color);
     } else {
         // sky color
         color = vec3(0.2, 0.2, 0.7);
