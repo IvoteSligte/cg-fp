@@ -13,7 +13,7 @@ struct Voxel {
 
 // mirrored with main.cpp
 // size of the voxel chunk in one dimension
-const uint CHUNK_SIZE = 64;
+const uint CHUNK_SIZE = 32;
 
 // NOTE: names used for sync with CPU, do not change
 layout(location = 0) uniform vec3 position;
@@ -50,8 +50,8 @@ RayCast rayCast(Ray ray) {
     vec3 step = sign(invDirection);
     vec3 delta = abs(invDirection);
     vec3 select = sign(invDirection) * 0.5 + 0.5;
-    vec3 t = select * invDirection;
-    
+    vec3 t = (select - fract(position)) * invDirection;
+
     while (true) {
         if (t.x < t.y) {
             if (t.x < t.z) {
@@ -71,7 +71,6 @@ RayCast rayCast(Ray ray) {
             }
         }
 
-        // FIXME: snapping when moving because index gets snapped?
         ivec3 index = ivec3(position);
         if (any(lessThan(index, ivec3(0))) || any(greaterThan(index, ivec3(CHUNK_SIZE)))) {
             return RayCast(false, vec3(0.0), ivec3(0));

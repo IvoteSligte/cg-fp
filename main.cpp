@@ -46,7 +46,7 @@ struct Voxel {
 
 // mirrored with frag.glsl
 // size of the voxel chunk in one dimension
-const long CHUNK_SIZE = 64;
+const long CHUNK_SIZE = 32;
 
 // mirrored with frag.glsl
 const int STORAGE_BUFFER_BINDING = 0;
@@ -58,12 +58,13 @@ float randf()
     return dist(gen);
 }
 
+// mirrored in frag.glsl
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
     void init()
     {
-        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f - glm::vec3(0.0, 0.0, 8.0);
+        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
 
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
@@ -72,7 +73,7 @@ struct Chunk {
 
                     voxels[x][y][z] = {
                         .color = glm::vec3(randf(), randf(), randf()),
-                        .flags = glm::length(p - center) > 20.0 ? 1u : 0u,
+                        .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
                     };
                 };
             }
