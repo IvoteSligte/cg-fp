@@ -51,6 +51,7 @@ public:
 
         glBindVertexArray(vertexArray);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+        assert(glIsBuffer(vertexBuffer));
         glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD_VERTICES), QUAD_VERTICES, GL_STATIC_DRAW);
 
         GLint posAttr = 0;
@@ -63,20 +64,21 @@ public:
     {
         glGenBuffers(1, &storageBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
+        assert(glIsBuffer(storageBuffer));
         glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
     }
 
     bool initShaders()
     {
-        // compute shader
-        {
-            GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
-            if (!voxelProgram.init({ lightUpdateShader }, {})) {
-                std::cerr << "Failed to initialize OpenGL state (voxelProgram error)." << std::endl;
-                return false;
-            }
-        }
+        // // compute shader
+        // {
+        //     GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
+        //     if (!voxelProgram.init({ lightUpdateShader }, {})) {
+        //         std::cerr << "Failed to initialize OpenGL state (voxelProgram error)." << std::endl;
+        //         return false;
+        //     }
+        // }
         // render shaders
         {
             GLuint vertexShader = loadShader(GL_VERTEX_SHADER, "vert.glsl");

@@ -60,6 +60,7 @@ inline GLuint loadShader(GLenum type, const char* path)
         std::cerr << "Error loading shader: " << buf << std::endl;
         return 0; // 0 means invalid OpenGL shader
     }
+    assert(glIsShader(id));
     return id;
 }
 
@@ -105,13 +106,13 @@ public:
             reportShaderProgramLog(program);
             return false;
         }
-        // validate program
-        glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
-        if (status == GL_FALSE) {
-            std::cerr << "Shader program validation error: ";
-            reportShaderProgramLog(program);
-            return false;
-        }
+        // // validate program
+        // glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
+        // if (status == GL_FALSE) {
+        //     std::cerr << "Shader program validation error: ";
+        //     reportShaderProgramLog(program);
+        //     return false;
+        // }
         return true;
     }
 
