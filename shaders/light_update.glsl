@@ -19,12 +19,14 @@ struct Voxel {
 // size of the voxel chunk in one dimension
 const uint CHUNK_SIZE = 32;
 
-layout(std430, binding = 0) readonly buffer Chunk {
+layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
 void main() {
     uvec3 index = gl_GlobalInvocationID;
+
+    chunk.voxels[index.x][index.y][index.z].color = uvec3(1);
 
     // TODO:
 }

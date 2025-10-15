@@ -126,10 +126,9 @@ void main() {
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
         color = chunk.voxels[index.x][index.y][index.z].emission;
-
-
         color = vec3(chunk.voxels[index.x][index.y][index.z].color);
     } else {
+        // sky color
         color = vec3(0.2, 0.2, 0.7);
     }
     fragColor = vec4(color, 1.0);

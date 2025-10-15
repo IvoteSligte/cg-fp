@@ -40,14 +40,14 @@ void App::initChunkBuffer()
 
 bool App::initShaders()
 {
-    // // compute shader
-    // {
-    //     GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
-    //     if (!voxelProgram.init({ lightUpdateShader }, {})) {
-    //         std::cerr << "Failed to initialize OpenGL state (voxelProgram error)." << std::endl;
-    //         return false;
-    //     }
-    // }
+    // compute shader
+    {
+        GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
+        if (!voxelProgram.init({ lightUpdateShader }, {})) {
+            std::cerr << "Failed to initialize OpenGL state (voxelProgram error)." << std::endl;
+            return false;
+        }
+    }
     // render shaders
     {
         GLuint vertexShader = loadShader(GL_VERTEX_SHADER, "vert.glsl");
@@ -101,12 +101,12 @@ bool App::update(InputState& inputs, float deltaTime)
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // {
-    //     voxelProgram.use();
-    //     glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
-    // }
-    // // ensure voxel chunk update happens before rendering
-    // glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    {
+        voxelProgram.use();
+        glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
+    }
+    // ensure voxel chunk update happens before rendering
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     {
         renderProgram.use();
         glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(camera.getPosition()));
