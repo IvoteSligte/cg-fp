@@ -9,6 +9,7 @@ pkgs.mkShell {
     SDL2
     glm
     glew
+    cmake
     mesa # for OpenGL
   ];
 }

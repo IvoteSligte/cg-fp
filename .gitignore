@@ -1,3 +1,4 @@
 .direnv/
 vgcore*
 main
+build/*

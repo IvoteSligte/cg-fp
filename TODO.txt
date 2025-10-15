@@ -3,3 +3,8 @@ resizing and aspect ratio in shader
 shader includes
 
 convert SDL2 to SDL1
+
+check cmake version on uni PCs
+
+ensure shaders are accessed properly regardless of where the executable is called from
+
