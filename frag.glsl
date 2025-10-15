@@ -10,6 +10,8 @@ struct Voxel {
     vec3 emission;
     uint _padding0;
     vec3 diffuse;
+    uint _padding1;
+    uvec3 color;
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -124,6 +126,9 @@ void main() {
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
         color = chunk.voxels[index.x][index.y][index.z].emission;
+
+
+        color = vec3(chunk.voxels[index.x][index.y][index.z].color);
     } else {
         color = vec3(0.2, 0.2, 0.7);
     }

@@ -1,3 +1,7 @@
+#include "camera.h"
+#include "scene.h"
+#include "sdl.h"
+#include "shader.h"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
@@ -5,7 +9,6 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <algorithm>
-#include <cassert>
 #include <fstream>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -13,159 +16,36 @@
 #include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 #include <iostream>
+#include <map>
 #include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
-// TEMP
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/io.hpp>
-
-const glm::vec3 FORWARD = glm::vec3(0.0, 0.0, -1.0);
-const glm::vec3 RIGHT = glm::vec3(1.0, 0.0, 0.0);
-const glm::vec3 UP = glm::vec3(0.0, 1.0, 0.0);
-
-const GLfloat QUAD_VERTICES[] = {
-    -1.0, -1.0,
-    1.0, -1.0,
-    -1.0, 1.0,
-    -1.0, 1.0,
-    1.0, 1.0,
-    1.0, -1.0
-};
-
-// mirrored with frag.glsl
-// NOTE: order is important due to alignment
-struct Voxel {
-    glm::vec3 emission;
-    uint _padding0;
-    glm::vec3 diffuse;
-    // bit 0 set indicates that the voxel exists
-    uint flags;
-};
-
-// mirrored with frag.glsl
-// size of the voxel chunk in one dimension
-const long CHUNK_SIZE = 32;
-
-// mirrored with frag.glsl
-const int STORAGE_BUFFER_BINDING = 0;
-
-float randf()
-{
-    auto gen = std::mt19937(std::random_device {}());
-    auto dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
-    return dist(gen);
-}
-
-// mirrored in frag.glsl
-struct Chunk {
-    Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
-
-    void init()
-    {
-        glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
-
-        for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
-            for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
-                for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    glm::vec3 p = glm::vec3(x, y, z);
-
-                    voxels[x][y][z] = {
-                        .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
-                        ._padding0 = 0,
-                        .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
-                        .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
-                    };
-                };
-            }
-        }
-    }
-};
-
-bool readFile(const char* path, std::string& out)
-{
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        std::cerr << "Error loading shader: Failed to open file: " << path << std::endl;
-        return false;
-    }
-    std::stringstream sstream;
-    sstream << file.rdbuf();
-    out = sstream.str();
-    return true;
-}
-
-// TODO: ensure OpenGL version is at least 4.3 for compute shaders (also put version in shader)
-
-// type is either GL_VERTEX_SHADER, GL_FRAGMENT_SHADER or GL_COMPUTE_SHADER
-// path is the path to the shader file
-GLuint loadShader(GLenum type, const char* path)
-{
-    std::string string;
-    if (!readFile(path, string)) {
-        return 0; // 0 means invalid OpenGL shader
-    }
-    const char* source = string.c_str();
-
-    GLuint id = glCreateShader(type);
-    glShaderSource(id, 1, &source, nullptr);
-    glCompileShader(id);
-
-    GLint compiled = GL_FALSE;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
-    if (compiled != GL_TRUE) {
-        const int BUF_SIZE = 1024;
-        char buf[BUF_SIZE];
-        glGetShaderInfoLog(id, BUF_SIZE, nullptr, buf);
-        std::cerr << "Error loading shader: " << buf << std::endl;
-        return 0; // 0 means invalid OpenGL shader
-    }
-    return id;
-}
+// #define GLM_ENABLE_EXPERIMENTAL
+// #include <glm/gtx/io.hpp>
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
 {
     std::cout << "GL: " << message << std::endl;
 }
 
-struct InputState {
-    std::unordered_set<SDL_Keycode> pressed = {};
-    std::unordered_set<SDL_Keycode> held = {};
-    glm::vec2 mouseDelta = glm::vec2(0.0);
+void setupDebugInfo()
+{
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(glDebugCallback, nullptr);
+}
 
-    bool isPressed(SDL_Keycode key)
-    {
-        return pressed.find(key) != pressed.end();
-    }
-
-    bool isHeld(SDL_Keycode key)
-    {
-        return held.find(key) != held.end();
-    }
-};
-
-class GLState {
+class App {
 public:
-    GLState()
+    App()
     {
     }
 
-    bool init()
+    void initFullScreenQuad()
     {
-        chunk.init();
-
-        std::cout << "Initializing OpenGL." << std::endl;
-        // TODO: error handling (with gllsBuffers for buffers)
-
-        // --- debug info ---
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(glDebugCallback, nullptr);
-
-        // --- full screen quad ---
         glGenVertexArrays(1, &vertexArray);
         glGenBuffers(1, &vertexBuffer);
 
@@ -177,36 +57,64 @@ public:
         // each element is 2 times GL_FLOAT since each vec2 is two GL_FLOATs
         glVertexAttribPointer(posAttr, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
         glEnableVertexAttribArray(posAttr);
+    }
 
-        // --- storage buffer ---
+    void initChunkBuffer()
+    {
         glGenBuffers(1, &storageBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
         glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
+    }
+
+    bool initShaders()
+    {
+        // compute shader
+        {
+            GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
+            if (!voxelProgram.init({ lightUpdateShader }, {})) {
+                std::cerr << "Failed to initialize OpenGL state (voxelProgram error)." << std::endl;
+                return false;
+            }
+        }
+        // render shaders
+        {
+            GLuint vertexShader = loadShader(GL_VERTEX_SHADER, "vert.glsl");
+            GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, "frag.glsl");
+            // the position attribute "inPos" in the vertex shader is set to index 0
+            if (!renderProgram.init({ vertexShader, fragmentShader }, { { "inPos", 0 } })) {
+                std::cerr << "Failed to initialize OpenGL state (renderProgram error)." << std::endl;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool init()
+    {
+        chunk.init();
+
+        std::cout << "Initializing OpenGL." << std::endl;
+        // TODO: error handling (with glIsBuffers for buffers)
+
+        // --- ensure opengl version 4.3 is used ---
+        // TODO:
+
+        setupDebugInfo();
+        initFullScreenQuad();
+        initChunkBuffer();
+        if (!initShaders())
+            return false;
 
         // --- shaders ---
-        vertexShader = loadShader(GL_VERTEX_SHADER, "vert.glsl");
-        fragmentShader = loadShader(GL_FRAGMENT_SHADER, "frag.glsl");
-
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        // the position attribute "inPos" in the vertex shader is set to index 0
-        glBindAttribLocation(shaderProgram, 0, "inPos");
-        glLinkProgram(shaderProgram);
-
         std::cout << "Finished initializing OpenGL state." << std::endl;
         return true;
     }
 
-    ~GLState()
+    void destroy()
     {
-        if (shaderProgram)
-            glDeleteProgram(shaderProgram);
-        if (vertexShader)
-            glDeleteShader(vertexShader);
-        if (fragmentShader)
-            glDeleteShader(fragmentShader);
+        voxelProgram.destroy();
+        renderProgram.destroy();
         if (vertexBuffer)
             glDeleteBuffers(1, &vertexBuffer);
         if (vertexArray)
@@ -215,185 +123,42 @@ public:
             glDeleteBuffers(1, &storageBuffer);
     }
 
-    void update(InputState& inputs, float deltaTime)
+    bool update(InputState& inputs, float deltaTime)
     {
-        const float MOVEMENT_SPEED = 0.01;
-        const float ROTATE_SPEED = 0.01;
-        float moveDelta = MOVEMENT_SPEED * deltaTime;
-        float rotateDelta = ROTATE_SPEED * deltaTime;
+        camera.update(inputs, deltaTime);
 
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // reconstruct rotation
-        pitch += -inputs.mouseDelta.y * rotateDelta;
-        yaw += -inputs.mouseDelta.x * rotateDelta;
-        glm::quat yawRotation = glm::angleAxis(yaw, UP);
-        glm::vec3 right = yawRotation * RIGHT;
-        glm::quat pitchRotation = glm::angleAxis(pitch, right);
-        glm::mat3 rotation = glm::mat3_cast(glm::normalize(pitchRotation * yawRotation));
-        glm::vec3 forward = -rotation[2];
-
-        // update position
-        if (inputs.isHeld(SDLK_w)) {
-            position += forward * moveDelta;
+        // {
+        //     voxelProgram.use();
+        //     glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
+        // }
+        // // ensure voxel chunk update happens before rendering
+        // glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        {
+            renderProgram.use();
+            glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(camera.getPosition()));
+            glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(glm::inverse(camera.getRotation())));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
         }
-        if (inputs.isHeld(SDLK_s)) {
-            position += -forward * moveDelta;
-        }
-        if (inputs.isHeld(SDLK_d)) {
-            position += right * moveDelta;
-        }
-        if (inputs.isHeld(SDLK_a)) {
-            position += -right * moveDelta;
-        }
-
-        // std::cout << "Position: " << position << std::endl;
-        // std::cout << "Rotation: " << rotation << std::endl;
-
-        glUseProgram(shaderProgram);
-        glUniform3fv(glGetUniformLocation(shaderProgram, "position"), 1, glm::value_ptr(position));
-        glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "rotation"), 1, true, glm::value_ptr(glm::inverse(rotation)));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        return true;
     }
 
 private:
     Chunk chunk;
-    glm::vec3 position = glm::vec3(0.0f);
-    float pitch = 0.0f;
-    float yaw = 0.0f;
+    Camera camera;
 
-    GLuint shaderProgram = 0;
-    GLuint vertexShader = 0;
-    GLuint fragmentShader = 0;
+    ShaderProgram voxelProgram;
+    ShaderProgram renderProgram;
     GLuint vertexBuffer = 0;
     GLuint vertexArray = 0;
     GLuint storageBuffer = 0;
 };
 
-void log_sdl_error(std::string msg)
-{
-    std::cerr << msg << " Error: " << SDL_GetError() << std::endl;
-}
-
-class SDLState {
-public:
-    SDLState()
-    {
-    }
-
-    // Creates a window and OpenGL context.
-    bool init()
-    {
-        std::cout << "Initializing SDL." << std::endl;
-
-        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-            log_sdl_error("Failed to init SDL.");
-            return false;
-        }
-
-        // initial width and height (TODO: enable resizing)
-        int width = 800;
-        int height = 600;
-
-        window = SDL_CreateWindow("Voxel App", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-        if (window == nullptr) {
-            log_sdl_error("Failed to create window.");
-            return false;
-        }
-        glContext = SDL_GL_CreateContext(window);
-        if (glContext == nullptr) {
-            log_sdl_error("Failed to create GL context.");
-            return false;
-        }
-        // glewExperimental = GL_TRUE;
-        if (glewInit() != GLEW_OK) {
-            std::cerr << "Failed to init GLEW." << std::endl;
-            return false;
-        }
-        std::cout << "Initialization finished.\n"
-                  << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
-
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-
-        if (!glState.init())
-            return false;
-
-        initialized = true;
-        return true;
-    }
-
-    ~SDLState()
-    {
-        glState.~GLState();
-        if (glContext)
-            SDL_GL_DeleteContext(glContext);
-        if (window)
-            SDL_DestroyWindow(window);
-        SDL_Quit();
-    }
-
-    void run()
-    {
-        Uint64 last;
-        Uint64 now = SDL_GetPerformanceCounter();
-        bool running = true;
-
-        while (running) {
-            // get deltaTime
-            last = now;
-            now = SDL_GetPerformanceCounter();
-            float deltaTime = (double)((now - last) * 1000) / SDL_GetPerformanceFrequency();
-
-            // get window width/height
-            int width;
-            int height;
-            SDL_GetWindowSize(window, &width, &height);
-
-            // clear inputs for start of frame
-            // inputs.held.merge(inputs.pressed); // add pressed to held
-            inputs.pressed.clear();
-            inputs.mouseDelta = glm::vec2();
-
-            SDL_Event event;
-            // go through all events in the queue
-            while (SDL_PollEvent(&event)) {
-                switch (event.type) {
-                case SDL_KEYDOWN:
-                    if (!inputs.isHeld(event.key.keysym.sym)) {
-                        inputs.pressed.insert(event.key.keysym.sym);
-                    }
-                    inputs.held.insert(event.key.keysym.sym);
-                    break;
-                case SDL_KEYUP:
-                    inputs.pressed.erase(event.key.keysym.sym);
-                    inputs.held.erase(event.key.keysym.sym);
-                    break;
-                case SDL_MOUSEMOTION:
-                    inputs.mouseDelta = glm::vec2((float)event.motion.xrel / width, (float)event.motion.yrel / height) * deltaTime;
-                    break;
-                case SDL_QUIT:
-                    running = false;
-                    break;
-                }
-            }
-
-            glState.update(inputs, deltaTime);
-            SDL_GL_SwapWindow(window);
-        }
-    }
-
-private:
-    bool initialized = false;
-    SDL_Window* window = nullptr;
-    SDL_GLContext glContext = nullptr;
-    GLState glState;
-    InputState inputs;
-};
-
 int main()
 {
-    SDLState sdlState;
+    SDLState<App> sdlState;
 
     if (!sdlState.init())
         return EXIT_FAILURE;

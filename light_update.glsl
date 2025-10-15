@@ -1,12 +1,16 @@
 // compute shader
 #version 430
 
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+
 // mirrored with main.cpp
 // NOTE: order is important due to alignment
 struct Voxel {
     vec3 emission;
     uint _padding0;
     vec3 diffuse;
+    uint _padding1;
+    uvec3 color;
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -20,7 +24,7 @@ layout(std430, binding = 0) readonly buffer Chunk {
 } chunk;
 
 void main() {
-    uvec3 id = gl_GlobalInvocationID;
+    uvec3 index = gl_GlobalInvocationID;
 
     // TODO:
 }
