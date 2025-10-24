@@ -87,7 +87,7 @@ inline Voxel simpleScene(glm::uvec3 point)
         .flags = 1u,
     };
 
-    glm::vec3 lightPosition = glm::vec3(CHUNK_SIZE) / 2.0f + glm::vec3(0.0f, 4.0f, 0.0f);
+    glm::vec3 lightPosition = glm::vec3(CHUNK_SIZE) / 2.0f + glm::vec3(0.0f, CHUNK_SIZE / 4.0f, 0.0f);
     float lightRadius = CHUNK_SIZE / 8.0f;
     uint max = CHUNK_SIZE - 1;
 
@@ -114,7 +114,7 @@ struct Chunk {
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    voxels[x][y][z] = invertedSphereScene(glm::uvec3(x, y, z));
+                    voxels[x][y][z] = simpleScene(glm::uvec3(x, y, z));
                 };
             }
         }
