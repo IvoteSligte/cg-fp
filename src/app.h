@@ -28,4 +28,6 @@ private:
     GLuint storageBuffer = 0;
     // The index of the color double-buffer.
     GLuint dbColorReadIdx = 0;
+    // The number of frames since the start.
+    GLuint frameNumber = 0;
 };

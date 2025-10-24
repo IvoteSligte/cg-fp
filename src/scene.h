@@ -74,7 +74,7 @@ struct Chunk {
                         .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
                         .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
                         .dbColor = { glm::vec3(), glm::vec3() },
-                        .flags = glm::length(p - center) > 18.0 ? 1u : 0u,
+                        .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
                     };
                 };
             }

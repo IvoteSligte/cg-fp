@@ -20,6 +20,9 @@ layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
+const vec3 SKY_COLOR = vec3(0.2, 0.2, 0.7);
+const vec3 ERROR_COLOR = vec3(1.0, 0.0, 1.0); // magenta
+
 bool bitFlag(uint flags, uint index) {
     return (flags & (1u << index)) == 1u;
 }

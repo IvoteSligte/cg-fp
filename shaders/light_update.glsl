@@ -5,6 +5,11 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 #include "common.glsl"
 
+// NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
+
+// number of frames since start
+layout(location = 1) uniform uint frameNumber;
+
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
     Voxel voxel = getVoxel(index);
@@ -32,7 +37,7 @@ void main() {
     if (!rayCast.hit) {
         // sky color
         // TODO: proper skybox or sky color function
-        setColor(index, vec3(0.0, 1.0, 1.0));
+        setColor(index, SKY_COLOR);
         return;
     }
     float weight = 1.0; // TODO: cos-angle

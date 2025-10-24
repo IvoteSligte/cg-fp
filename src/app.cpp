@@ -103,11 +103,10 @@ bool App::update(InputState& inputs, float deltaTime)
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    static bool used = false;
-
     {
         voxelProgram.use();
         glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
+        glUniform1ui(voxelProgram.getUniformLocation("frameNumber"), frameNumber);
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
     }
     // swap double buffers
@@ -123,5 +122,6 @@ bool App::update(InputState& inputs, float deltaTime)
         glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(glm::inverse(camera.getRotation())));
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+    frameNumber += 1;
     return true;
 }
