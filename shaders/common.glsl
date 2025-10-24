@@ -120,12 +120,19 @@ uint hash(uint x) {
     return x;
 }
 
-uvec3 hash(uvec3 v) {
-    return uvec3(hash(v.x), hash(v.y), hash(v.z));
+// Random float in the range [0, 1]
+float random(uint seed) {
+    return hash(seed) * (1.0 / 4294967296.0);
 }
 
-uint hash(float x) {
-    return hash(floatBitsToUint(x));
-}
+const float PI = 3.14159265359;
 
+// FIXME: direction bias
+vec3 randomDirection(uint seed) {
+    float theta = random(seed * 2868849829u + 3875816143u) * (2.0 * PI);
+    float z = random(seed * 4156532671u + 2891336453u) * 2.0 - 1.0;
+    // radius of the circle on which (x, y) lies
+    float r = sqrt(1.0 - z * z);
+    return vec3(r * cos(theta), r * sin(theta), z);
+}
 

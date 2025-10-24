@@ -90,7 +90,7 @@ void SDLState<App>::destroy()
 template <typename App>
 void SDLState<App>::run()
 {
-    const int FRAME_RATE = 30;
+    const int FRAME_RATE = 3;
     const float FRAME_TIME = 1.0 / FRAME_RATE;
 
     Uint64 last;
@@ -104,8 +104,6 @@ void SDLState<App>::run()
         last = now;
         now = SDL_GetPerformanceCounter();
         float deltaTime = (double)((now - last) * 1000) / SDL_GetPerformanceFrequency();
-
-        std::cout << "DT: " << deltaTime << std::endl;
 
         // get window width/height
         int width;
@@ -143,9 +141,5 @@ void SDLState<App>::run()
         if (!app.update(inputs, deltaTime))
             break;
         SDL_GL_SwapWindow(window);
-
-        // if (deltaTime < FRAME_TIME) {
-        //     std::this_thread::sleep_for(std::chrono::duration<float>(FRAME_TIME - deltaTime));
-        // }
     }
 }

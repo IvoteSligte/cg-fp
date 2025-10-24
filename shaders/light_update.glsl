@@ -26,10 +26,14 @@ void main() {
 
     vec3 color = getColor(voxel);
     vec3 direction = vec3(1.1, 0.0, 0.0);
-    vec3 position = vec3(index) + direction; // TODO: ensure position is not in the same voxel
+    vec3 position = vec3(index) + randomDirection(frameNumber); // TODO: ensure position is not in the same voxel
     Ray ray = Ray(position, direction);
 
     if (isOutOfBounds(ray.origin)) {
+        return;
+    }
+    // fix light leaking through 2+ voxel thick walls
+    if (isSolid(getVoxel(ivec3(position)))) {
         return;
     }
     RayCast rayCast = rayCast(ray);

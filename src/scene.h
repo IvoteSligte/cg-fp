@@ -57,6 +57,52 @@ inline float randf()
     return dist(gen);
 }
 
+inline Voxel invertedSphereScene(glm::uvec3 point)
+{
+    glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
+    float radius = (float)CHUNK_SIZE / 2.0 - 1.0;
+    return Voxel {
+        .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
+        .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
+        .dbColor = {},
+        .flags = glm::length(glm::vec3(point) - center) > radius ? 1u : 0u,
+    };
+}
+
+inline Voxel simpleScene(glm::uvec3 point)
+{
+    const Voxel WALL = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(1.0),
+        .dbColor = {},
+        .flags = 1u,
+    };
+    const Voxel AIR = Voxel {
+        .flags = 0u,
+    };
+    const Voxel LIGHT = Voxel {
+        .emission = glm::vec3(1.0, 0.9, 0.7),
+        .diffuse = glm::vec3(0.0),
+        .dbColor = {},
+        .flags = 1u,
+    };
+
+    glm::vec3 lightPosition = glm::vec3(CHUNK_SIZE) / 2.0f + glm::vec3(0.0f, 4.0f, 0.0f);
+    float lightRadius = CHUNK_SIZE / 8.0f;
+    uint max = CHUNK_SIZE - 1;
+
+    if (point.x == 0 || point.y == 0 || point.z == 0) {
+        return WALL;
+    }
+    if (point.x == max || point.y == max || point.z == max) {
+        return WALL;
+    }
+    if (glm::distance(glm::vec3(point), lightPosition) < lightRadius) {
+        return LIGHT;
+    }
+    return AIR;
+}
+
 // mirrored in frag.glsl
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
@@ -68,14 +114,7 @@ struct Chunk {
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    glm::vec3 p = glm::vec3(x, y, z);
-
-                    voxels[x][y][z] = {
-                        .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
-                        .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
-                        .dbColor = { glm::vec3(), glm::vec3() },
-                        .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
-                    };
+                    voxels[x][y][z] = invertedSphereScene(glm::uvec3(x, y, z));
                 };
             }
         }
