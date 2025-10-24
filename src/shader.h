@@ -7,9 +7,6 @@
 // Loads a shader from the "shaders/" folder, given its name.
 GLuint loadShader(GLenum type, const std::string name);
 
-// Loads "common.glsl" and registers it as a named string to be used by #include in shaders.
-bool loadCommonShader();
-
 class ShaderProgram {
 public:
     ShaderProgram() { };

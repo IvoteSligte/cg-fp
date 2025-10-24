@@ -41,8 +41,6 @@ void App::initChunkBuffer()
 
 bool App::initShaders()
 {
-    loadCommonShader();
-
     // compute shader
     {
         GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");

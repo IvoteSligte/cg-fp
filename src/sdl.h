@@ -97,6 +97,8 @@ void SDLState<App>::run()
     Uint64 now = SDL_GetPerformanceCounter();
     bool running = true;
 
+    std::cout << "App started." << std::endl;
+
     while (running) {
         // get deltaTime
         last = now;

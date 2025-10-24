@@ -23,20 +23,6 @@ bool readShader(const std::string name, std::string& out)
     return true;
 }
 
-bool loadCommonShader()
-{
-    // NOTE: name needs to start with a / according to ARB_shading_language_include
-    std::string name = "/common.glsl";
-    std::string source;
-    if (!readShader(name, source)) {
-        return false;
-    }
-    assert(source.length() > 0);
-    glNamedStringARB(GL_SHADER_INCLUDE_ARB, name.length(), name.c_str(), (GLint)source.length(), source.c_str());
-    assert(glIsNamedStringARB(name.length(), name.c_str()));
-    return true;
-}
-
 // TODO: ensure OpenGL version is at least 4.3 for compute shaders
 
 // Replaces `#include "shader.glsl"` with the shader code itself.
