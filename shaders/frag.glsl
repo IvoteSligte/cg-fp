@@ -20,7 +20,7 @@ void main() {
     Ray ray = Ray(position, direction);
 
     // camera is outside chunk
-    if (any(lessThan(ray.origin, vec3(0.0))) || any(greaterThan(ray.origin, vec3(CHUNK_SIZE)))) {
+    if (isOutOfBounds(ray.origin)) {
         // magenta (indicating error)
         fragColor = vec4(1.0, 0.0, 1.0, 1.0);
         return;

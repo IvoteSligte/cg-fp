@@ -51,10 +51,19 @@ struct RayCast {
     bool hit;
     vec3 position;
     ivec3 voxelIndex;
+    int steps;
 };
 
+bool isOutOfBounds(vec3 position) {
+    return any(lessThan(position, vec3(0.0))) || any(greaterThanEqual(position, vec3(CHUNK_SIZE)));
+}
+
+bool isOutOfBounds(ivec3 position) {
+    return any(lessThan(position, ivec3(0))) || any(greaterThanEqual(position, ivec3(CHUNK_SIZE)));
+}
+
 // Casts a ray, returning hit information.
-// Assumes the ray falls within the chunk.
+// Assumes ray.position is within the chunk.
 RayCast rayCast(Ray ray) {
     vec3 invDirection = sign(ray.direction) / (abs(ray.direction) + 1e-5);
 
@@ -67,34 +76,26 @@ RayCast rayCast(Ray ray) {
     int i = 0;
     while (true) {
         // TEMP
-        if (i > 10000)
-            break;
+        if (i > 10000) {
+            return RayCast(false, vec3(0.0), ivec3(0), i);
+        }
         i += 1;
 
+        int n = 2;
         if (t.x < t.y) {
-            if (t.x < t.z) {
-                position.x += step.x;
-                t.x += delta.x;
-            } else {
-                position.z += step.z;
-                t.z += delta.z;
-            }
+            if (t.x < t.z) n = 0;
         } else {
-            if (t.y < t.z) {
-                position.y += step.y;
-                t.y += delta.y;
-            } else {
-                position.z += step.z;
-                t.z += delta.z;
-            }
+            if (t.y < t.z) n = 1;
         }
+        position[n] += step[n];
+        t[n] += delta[n];
 
         ivec3 index = ivec3(position);
-        if (any(lessThan(index, ivec3(0))) || any(greaterThan(index, ivec3(CHUNK_SIZE)))) {
-            return RayCast(false, vec3(0.0), ivec3(0));
+        if (isOutOfBounds(index)) {
+            return RayCast(false, vec3(0.0), ivec3(0), i);
         }
         if (isSolid(getVoxel(index))) {
-            return RayCast(true, position, index);
+            return RayCast(true, position, index, i);
         }
     }
 }

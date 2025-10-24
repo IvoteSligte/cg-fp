@@ -20,16 +20,23 @@ void main() {
     }
 
     vec3 color = getColor(voxel);
-    vec3 direction = vec3(1.0, 0.0, 0.0);
+    vec3 direction = vec3(1.1, 0.0, 0.0);
     vec3 position = vec3(index) + direction; // TODO: ensure position is not in the same voxel
     Ray ray = Ray(position, direction);
+
+    if (isOutOfBounds(ray.origin)) {
+        color = vec3(1.0, 0.0, 1.0);
+        return;
+    }
     RayCast rayCast = rayCast(ray);
 
     if (!rayCast.hit) {
+        color = vec3(0.0, 1.0, 1.0);
         return;
     }
     float weight = 1.0; // TODO: cos-angle
-    color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), 0.01);
+    // color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), 0.01);
+    color = vec3(rayCast.steps / 10.0);
 
     setColor(index, color);
 }
