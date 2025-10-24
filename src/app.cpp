@@ -41,6 +41,9 @@ void App::initChunkBuffer()
 
 bool App::initShaders()
 {
+    // load common shader
+    loadCommonShader();
+
     // compute shader
     {
         GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
@@ -70,7 +73,8 @@ bool App::init()
     // TODO: error handling (with glIsBuffers for buffers)
 
     // --- ensure opengl version 4.3 is used ---
-    // TODO:
+    // TODO: ^^^ and exit with a nice error on failure instead of assert
+    assert(GLEW_ARB_shading_language_include);
 
     setupDebugInfo();
     initFullScreenQuad();

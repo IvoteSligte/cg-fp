@@ -6,11 +6,13 @@
 #include <sstream>
 #include <string>
 
-bool readFile(const std::string path, std::string& out)
+static const std::string SHADER_FOLDER = std::string(PROJECT_ROOT) + "/shaders/";
+
+bool readShader(const std::string name, std::string& out)
 {
-    std::ifstream file(path);
+    std::ifstream file(SHADER_FOLDER + name);
     if (!file.is_open()) {
-        std::cerr << "Error loading shader " << path << ": Failed to open file." << std::endl;
+        std::cerr << "Error loading shader " << name << ": Failed to open file." << std::endl;
         return false;
     }
     std::stringstream sstream;
@@ -19,15 +21,29 @@ bool readFile(const std::string path, std::string& out)
     return true;
 }
 
+bool loadCommonShader()
+{
+    // NOTE: name needs to start with a / according to ARB_shading_language_include
+    std::string name = "/common.glsl";
+    std::string source;
+    if (!readShader(name, source)) {
+        return false;
+    }
+    assert(source.length() > 0);
+    glNamedStringARB(GL_SHADER_INCLUDE_ARB, name.length(), name.c_str(), (GLint)source.length(), source.c_str());
+    assert(glIsNamedStringARB(name.length(), name.c_str()));
+    return true;
+}
+
 // TODO: ensure OpenGL version is at least 4.3 for compute shaders (also put version in shader)
 
 // type is either GL_VERTEX_SHADER, GL_FRAGMENT_SHADER or GL_COMPUTE_SHADER
 // path is the path to the shader file
-GLuint loadShader(GLenum type, const std::string path)
+GLuint loadShader(GLenum type, const std::string name)
 {
     std::string string;
 
-    if (!readFile(std::string(PROJECT_ROOT) + "/shaders/" + path, string)) {
+    if (!readShader(name, string)) {
         return 0; // 0 means invalid OpenGL shader
     }
     const char* source = string.c_str();
@@ -42,7 +58,7 @@ GLuint loadShader(GLenum type, const std::string path)
         const int BUF_SIZE = 1024;
         char buf[BUF_SIZE];
         glGetShaderInfoLog(id, BUF_SIZE, nullptr, buf);
-        std::cerr << "Error loading shader " << path << ": " << buf << std::endl;
+        std::cerr << "Error loading shader " << name << ": " << buf << std::endl;
         return 0; // 0 means invalid OpenGL shader
     }
     assert(glIsShader(id));
