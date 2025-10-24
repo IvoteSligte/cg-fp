@@ -46,8 +46,8 @@ void main() {
     for (int x = -1; x <= 1; x += 1) {
         for (int y = -1; y <= 1; y += 1) {
             for (int z = -1; z <= 1; z += 1) {
-                vec3 nbColor = getColor(getVoxel(ivec3(mod(ivec3(index) + ivec3(1), ivec3(CHUNK_SIZE)))));
-                color = mix(color, nbColor, 0.0001);
+                vec3 nbColor = getColor(getVoxel(ivec3(mod(ivec3(index) + ivec3(x, y, z), ivec3(CHUNK_SIZE)))));
+                color = mix(color, nbColor, 0.01);
             }
         }
     }
