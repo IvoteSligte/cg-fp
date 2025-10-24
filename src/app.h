@@ -19,7 +19,7 @@ public:
 
 private:
     Chunk chunk;
-    Camera camera;
+    Camera camera { glm::vec3(CHUNK_SIZE) / 2.0f };
 
     ShaderProgram voxelProgram;
     ShaderProgram renderProgram;

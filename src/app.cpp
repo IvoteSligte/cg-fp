@@ -41,7 +41,6 @@ void App::initChunkBuffer()
 
 bool App::initShaders()
 {
-    // load common shader
     loadCommonShader();
 
     // compute shader
@@ -119,6 +118,7 @@ bool App::update(InputState& inputs, float deltaTime)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     {
         renderProgram.use();
+        glUniform1ui(renderProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
         glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(camera.getPosition()));
         glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(glm::inverse(camera.getRotation())));
         glDrawArrays(GL_TRIANGLES, 0, 6);

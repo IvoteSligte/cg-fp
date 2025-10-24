@@ -10,6 +10,11 @@ const glm::vec3 UP = glm::vec3(0.0, 1.0, 0.0);
 
 class Camera {
 public:
+    Camera(glm::vec3 position)
+        : position { position }
+    {
+    }
+
     void update(InputState& inputs, float deltaTime);
     glm::vec3 getPosition();
     glm::mat3 getRotation();

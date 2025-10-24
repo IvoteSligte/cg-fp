@@ -35,7 +35,7 @@ bool loadCommonShader()
     return true;
 }
 
-// TODO: ensure OpenGL version is at least 4.3 for compute shaders (also put version in shader)
+// TODO: ensure OpenGL version is at least 4.3 for compute shaders
 
 // type is either GL_VERTEX_SHADER, GL_FRAGMENT_SHADER or GL_COMPUTE_SHADER
 // path is the path to the shader file

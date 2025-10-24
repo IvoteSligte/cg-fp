@@ -17,10 +17,11 @@ void main() {
     
     vec2 screenPos = (fragPos * 2.0 - 1.0) * aspectRatio;
     vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, -1.0));
+    // TODO: just set position of character to CHUNK_WIDTH/2
     Ray ray = Ray(position, direction);
 
     // camera is outside chunk
-    if (any(lessThan(ray.origin, CHUNK_MIN)) || any(greaterThan(ray.origin, CHUNK_MAX))) {
+    if (any(lessThan(ray.origin, vec3(0.0))) || any(greaterThan(ray.origin, vec3(CHUNK_SIZE)))) {
         // magenta (indicating error)
         fragColor = vec4(1.0, 0.0, 1.0, 1.0);
         return;

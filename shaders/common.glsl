@@ -1,4 +1,3 @@
-
 // NOTE: names used for sync with CPU, do not change
 layout(location = 0) uniform uint dbColorReadIdx;
 
@@ -29,6 +28,11 @@ Voxel getVoxel(ivec3 index) {
     return chunk.voxels[index.x][index.y][index.z];
 }
 
+// returns true if VOXEL is solid
+bool isSolid(Voxel voxel) {
+    return bitFlag(voxel.flags, 0);
+}
+
 vec3 getColor(Voxel voxel) {
     return voxel.dbColor[dbColorReadIdx];
 }
@@ -49,15 +53,12 @@ struct RayCast {
     ivec3 voxelIndex;
 };
 
-const vec3 CHUNK_MIN = vec3(-float(CHUNK_SIZE) / 2.0);
-const vec3 CHUNK_MAX = vec3(float(CHUNK_SIZE) / 2.0);
-
 // Casts a ray, returning hit information.
 // Assumes the ray falls within the chunk.
 RayCast rayCast(Ray ray) {
     vec3 invDirection = sign(ray.direction) / (abs(ray.direction) + 1e-5);
 
-    vec3 position = ray.origin - CHUNK_MIN;
+    vec3 position = ray.origin;
     vec3 step = sign(invDirection);
     vec3 delta = abs(invDirection);
     vec3 select = sign(invDirection) * 0.5 + 0.5;
@@ -86,11 +87,8 @@ RayCast rayCast(Ray ray) {
         if (any(lessThan(index, ivec3(0))) || any(greaterThan(index, ivec3(CHUNK_SIZE)))) {
             return RayCast(false, vec3(0.0), ivec3(0));
         }
-
-        Voxel voxel = getVoxel(index);
-
-        if (bitFlag(voxel.flags, 0)) {
-            return RayCast(true, position + CHUNK_MIN, index);
+        if (isSolid(getVoxel(index))) {
+            return RayCast(true, position, index);
         }
     }
 }
