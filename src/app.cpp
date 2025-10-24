@@ -73,7 +73,7 @@ bool App::init()
     // TODO: ^^^ and exit with a nice error on failure instead of assert
     assert(GLEW_ARB_shading_language_include);
 
-    setupDebugInfo();
+    setupDebugInfo(); // TEMP commented out
     initFullScreenQuad();
     initChunkBuffer();
     if (!initShaders())
@@ -102,6 +102,8 @@ bool App::update(InputState& inputs, float deltaTime)
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    static bool used = false;
 
     {
         voxelProgram.use();

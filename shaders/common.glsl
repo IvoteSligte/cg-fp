@@ -64,7 +64,13 @@ RayCast rayCast(Ray ray) {
     vec3 select = sign(invDirection) * 0.5 + 0.5;
     vec3 t = (select - fract(position)) * invDirection;
 
+    int i = 0;
     while (true) {
+        // TEMP
+        if (i > 10000)
+            break;
+        i += 1;
+
         if (t.x < t.y) {
             if (t.x < t.z) {
                 position.x += step.x;

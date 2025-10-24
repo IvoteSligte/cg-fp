@@ -144,8 +144,8 @@ void SDLState<App>::run()
             break;
         SDL_GL_SwapWindow(window);
 
-        if (deltaTime < FRAME_TIME) {
-            std::this_thread::sleep_for(std::chrono::duration<float>(FRAME_TIME - deltaTime));
-        }
+        // if (deltaTime < FRAME_TIME) {
+        //     std::this_thread::sleep_for(std::chrono::duration<float>(FRAME_TIME - deltaTime));
+        // }
     }
 }
