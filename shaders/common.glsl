@@ -62,41 +62,48 @@ bool isOutOfBounds(ivec3 position) {
     return any(lessThan(position, ivec3(0))) || any(greaterThanEqual(position, ivec3(CHUNK_SIZE)));
 }
 
+// 1.0 / vector, mapping zero-dimensions to 1e30
+vec3 invert(vec3 v) {
+    return vec3(
+        v.x == 0 ? 1e30 : 1.0 / v.x,
+        v.y == 0 ? 1e30 : 1.0 / v.y,
+        v.z == 0 ? 1e30 : 1.0 / v.z
+    );
+}
+
 // Casts a ray, returning hit information.
 // Assumes ray.position is within the chunk.
 RayCast rayCast(Ray ray) {
-    vec3 invDirection = sign(ray.direction) / (abs(ray.direction) + 1e-5);
+    vec3 invDirection = invert(ray.direction);
 
-    vec3 position = ray.origin;
-    vec3 step = sign(invDirection);
+    vec3 position = floor(ray.origin);
+    vec3 step = sign(ray.direction);
     vec3 delta = abs(invDirection);
-    vec3 select = sign(invDirection) * 0.5 + 0.5;
-    vec3 t = (select - fract(position)) * invDirection;
+    // relative boundary of the next voxel
+    vec3 boundary = max(step, vec3(0.0));
+    vec3 t = (boundary - fract(ray.origin)) * invDirection;
 
     int i = 0;
     while (true) {
-        // TEMP
-        if (i > 10000) {
-            return RayCast(false, vec3(0.0), ivec3(0), i);
-        }
-        i += 1;
-
-        int n = 2;
-        if (t.x < t.y) {
-            if (t.x < t.z) n = 0;
-        } else {
-            if (t.y < t.z) n = 1;
-        }
-        position[n] += step[n];
-        t[n] += delta[n];
-
-        ivec3 index = ivec3(position);
+        // ivec3(position) truncates towards zero and is therefore not the same
+        // for negative values
+        ivec3 index = ivec3(floor(position));
         if (isOutOfBounds(index)) {
             return RayCast(false, vec3(0.0), ivec3(0), i);
         }
         if (isSolid(getVoxel(index))) {
             return RayCast(true, position, index, i);
         }
+        i += 1;
+
+        int dim = 2;
+        if (t.x < t.y) {
+            if (t.x < t.z) dim = 0;
+        } else {
+            if (t.y < t.z) dim = 1;
+        }
+        position[dim] += step[dim];
+        t[dim] += delta[dim];
     }
 }
 

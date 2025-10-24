@@ -25,18 +25,18 @@ void main() {
     Ray ray = Ray(position, direction);
 
     if (isOutOfBounds(ray.origin)) {
-        color = vec3(1.0, 0.0, 1.0);
         return;
     }
     RayCast rayCast = rayCast(ray);
 
     if (!rayCast.hit) {
-        color = vec3(0.0, 1.0, 1.0);
+        // sky color
+        // TODO: proper skybox or sky color function
+        setColor(index, vec3(0.0, 1.0, 1.0));
         return;
     }
     float weight = 1.0; // TODO: cos-angle
-    // color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), 0.01);
-    color = vec3(rayCast.steps / 10.0);
+    color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), 0.01);
 
     setColor(index, color);
 }
