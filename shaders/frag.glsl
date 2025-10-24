@@ -1,11 +1,10 @@
 // fragment shader
 #version 430
-#extension GL_ARB_shading_language_include : require
 
 in vec2 fragPos;
 out vec4 fragColor;
 
-#include "/common.glsl"
+#include "common.glsl"
 
 // NOTE: names used for sync with CPU, do not change
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl

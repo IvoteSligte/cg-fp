@@ -1,8 +1,10 @@
 #include "shader.h"
 #include <GL/glew.h>
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 #include <string>
 
@@ -37,19 +39,46 @@ bool loadCommonShader()
 
 // TODO: ensure OpenGL version is at least 4.3 for compute shaders
 
+// Replaces `#include "shader.glsl"` with the shader code itself.
+bool addIncludes(const std::string& source, std::string& result)
+{
+    const std::basic_regex regex("#include \".*\"\n");
+    auto begin = std::sregex_iterator(source.begin(), source.end(), regex);
+    result.clear();
+    std::size_t lastPos = 0;
+
+    // TODO: add #line directives
+    for (auto it = begin; it != std::sregex_iterator(); ++it) {
+        result += source.substr(lastPos, it->position() - lastPos);
+        lastPos = it->position() + it->length();
+        std::string match = it->str();
+        std::string includeSource;
+        if (!readShader(match.substr(10, match.length() - 12), includeSource)) {
+            return false;
+        }
+        result += includeSource;
+    }
+    result.append(source.substr(lastPos));
+    return true;
+}
+
 // type is either GL_VERTEX_SHADER, GL_FRAGMENT_SHADER or GL_COMPUTE_SHADER
 // path is the path to the shader file
 GLuint loadShader(GLenum type, const std::string name)
 {
-    std::string string;
+    std::string preIncludeSource;
 
-    if (!readShader(name, string)) {
+    if (!readShader(name, preIncludeSource)) {
         return 0; // 0 means invalid OpenGL shader
     }
-    const char* source = string.c_str();
+    std::string source;
+    if (!addIncludes(preIncludeSource, source)) {
+        return 0;
+    }
+    const char* rawSource = source.c_str();
 
     GLuint id = glCreateShader(type);
-    glShaderSource(id, 1, &source, nullptr);
+    glShaderSource(id, 1, &rawSource, nullptr);
     glCompileShader(id);
 
     GLint compiled = GL_FALSE;
