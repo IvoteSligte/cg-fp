@@ -31,15 +31,15 @@ const GLfloat QUAD_VERTICES[] = {
 };
 
 // mirrored with shaders
-// NOTE: order is important due to alignment
-struct Voxel {
-    glm::vec3 emission;
-    uint _padding0;
-    glm::vec3 diffuse;
-    uint _padding1;
-    glm::uvec3 color;
+// alignas(16) is necessary to prevent layout optimizations
+struct alignas(16) Voxel {
+    alignas(16) glm::vec3 emission;
+    alignas(16) glm::vec3 diffuse;
+    // Double-buffered color.
+    // The read index is indicated by dbColorReadIdx.
+    alignas(16) glm::vec3 dbColor[2];
     // bit 0 set indicates that the voxel exists
-    uint flags;
+    alignas(16) glm::uint flags;
 };
 
 // mirrored with shaders
@@ -72,10 +72,8 @@ struct Chunk {
 
                     voxels[x][y][z] = {
                         .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
-                        ._padding0 = 0,
                         .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
-                        ._padding1 = 0,
-                        .color = glm::uvec3(0),
+                        .dbColor = { glm::vec3(), glm::vec3() },
                         .flags = glm::length(p - center) > 15.0 ? 1u : 0u,
                     };
                 };

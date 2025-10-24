@@ -4,13 +4,12 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 // mirrored with main.cpp
-// NOTE: order is important due to alignment
 struct Voxel {
     vec3 emission;
-    uint _padding0;
     vec3 diffuse;
-    uint _padding1;
-    uvec3 color;
+    // Double-buffered color.
+    // The read index is indicated by dbColorReadIdx.
+    vec3 dbColor[2];
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -23,29 +22,35 @@ layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
-int offset(uint a, int b) {
-    return int(mod(a + b, CHUNK_SIZE));
+layout(location = 0) uniform uint dbColorReadIdx;
+
+Voxel getVoxel(ivec3 index) {
+    return chunk.voxels[index.x][index.y][index.z];
+}
+
+vec3 getColor(Voxel voxel) {
+    return voxel.dbColor[dbColorReadIdx];
+}
+
+void setColor(ivec3 index, vec3 color) {
+    uint writeIdx = 1 - dbColorReadIdx;
+    chunk.voxels[index.x][index.y][index.z].dbColor[writeIdx] = color;
 }
 
 void main() {
-    uvec3 index = gl_GlobalInvocationID;
-    vec3 emission = chunk.voxels[index.x][index.y][index.z].emission;
-    vec3 color = uintBitsToFloat(chunk.voxels[index.x][index.y][index.z].color);
+    ivec3 index = ivec3(gl_GlobalInvocationID);
+    vec3 emission = getVoxel(index).emission;
+    vec3 color = getColor(getVoxel(index));
     color = max(color, emission);
 
     for (int x = -1; x <= 1; x += 1) {
         for (int y = -1; y <= 1; y += 1) {
             for (int z = -1; z <= 1; z += 1) {
-                vec3 nbColor = uintBitsToFloat(chunk.voxels[offset(index.x, 1)][offset(index.y, 1)][offset(index.z, 1)].color);
+                vec3 nbColor = getColor(getVoxel(ivec3(mod(ivec3(index) + ivec3(1), ivec3(CHUNK_SIZE)))));
                 color = mix(color, nbColor, 0.0001);
             }
         }
     }
 
-    uvec3 uColor = floatBitsToUint(color);
-    for (int i = 0; i < 3; i++) {
-        atomicExchange(chunk.voxels[index.x][index.y][index.z].color[i], uColor[i]);
-    }
-
-    // TODO:
+    setColor(index, color);
 }

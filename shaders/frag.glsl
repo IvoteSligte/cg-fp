@@ -5,13 +5,12 @@ in vec2 fragPos;
 out vec4 fragColor;
 
 // mirrored with main.cpp
-// NOTE: order is important due to alignment
 struct Voxel {
     vec3 emission;
-    uint _padding0;
     vec3 diffuse;
-    uint _padding1;
-    uvec3 color;
+    // Double-buffered color.
+    // The read index is indicated by dbColorReadIdx.
+    vec3 dbColor[2];
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -27,9 +26,18 @@ layout(std430, binding = 0) readonly buffer Chunk {
 // NOTE: names used for sync with CPU, do not change
 layout(location = 0) uniform vec3 position;
 layout(location = 1) uniform mat3 rotation;
+layout(location = 2) uniform uint dbColorReadIdx;
 
 bool bitFlag(uint flags, uint index) {
     return (flags & (1u << index)) == 1u;
+}
+
+Voxel getVoxel(ivec3 index) {
+    return chunk.voxels[index.x][index.y][index.z];
+}
+
+vec3 getColor(Voxel voxel) {
+    return voxel.dbColor[dbColorReadIdx];
 }
 
 struct Ray {
@@ -81,7 +89,7 @@ RayCast rayCast(Ray ray) {
             return RayCast(false, vec3(0.0), ivec3(0));
         }
 
-        Voxel voxel = chunk.voxels[index.x][index.y][index.z];
+        Voxel voxel = getVoxel(index);
 
         if (bitFlag(voxel.flags, 0)) {
             return RayCast(true, position + CHUNK_MIN, index);
@@ -125,8 +133,7 @@ void main() {
 
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
-        color = chunk.voxels[index.x][index.y][index.z].emission;
-        color = uintBitsToFloat(chunk.voxels[index.x][index.y][index.z].color);
+        color = getColor(getVoxel(index));
     } else {
         // sky color
         color = vec3(0.2, 0.2, 0.7);

@@ -1,4 +1,5 @@
 #include "app.h"
+#include "scene.h"
 #include "shader.h"
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
@@ -103,8 +104,13 @@ bool App::update(InputState& inputs, float deltaTime)
 
     {
         voxelProgram.use();
+        glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
     }
+    // swap double buffers
+    // done before rendering so that the written data from this frame's chunk update is read
+    dbColorReadIdx = 1 - dbColorReadIdx;
+
     // ensure voxel chunk update happens before rendering
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     {

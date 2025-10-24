@@ -26,4 +26,6 @@ private:
     GLuint vertexBuffer = 0;
     GLuint vertexArray = 0;
     GLuint storageBuffer = 0;
+    // The index of the color double-buffer.
+    GLuint dbColorReadIdx = 0;
 };

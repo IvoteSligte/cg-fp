@@ -4,7 +4,7 @@
 void Camera::update(InputState& inputs, float deltaTime)
 {
     const float MOVEMENT_SPEED = 0.01;
-    const float ROTATE_SPEED = 0.01;
+    const float ROTATE_SPEED = 0.05;
     float moveDelta = MOVEMENT_SPEED * deltaTime;
     float rotateDelta = ROTATE_SPEED * deltaTime;
 

@@ -10,7 +10,7 @@ bool readFile(const std::string path, std::string& out)
 {
     std::ifstream file(path);
     if (!file.is_open()) {
-        std::cerr << "Error loading shader: Failed to open file: " << path << std::endl;
+        std::cerr << "Error loading shader " << path << ": Failed to open file." << std::endl;
         return false;
     }
     std::stringstream sstream;
@@ -42,7 +42,7 @@ GLuint loadShader(GLenum type, const std::string path)
         const int BUF_SIZE = 1024;
         char buf[BUF_SIZE];
         glGetShaderInfoLog(id, BUF_SIZE, nullptr, buf);
-        std::cerr << "Error loading shader: " << buf << std::endl;
+        std::cerr << "Error loading shader " << path << ": " << buf << std::endl;
         return 0; // 0 means invalid OpenGL shader
     }
     assert(glIsShader(id));
