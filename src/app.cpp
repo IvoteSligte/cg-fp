@@ -114,6 +114,9 @@ void App::destroy()
 
 bool App::update(InputState& inputs, float deltaTime)
 {
+    // recalculate random directions to reduce direction bias
+    initRandomDirections();
+    // update camera based on user input
     camera.update(inputs, deltaTime);
 
     glClearColor(0.0, 0.0, 0.0, 1.0);

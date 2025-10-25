@@ -36,6 +36,9 @@ vec3 voxelNormal(vec3 outDirection) {
     return norm;
 }
 
+// TODO: per-face lighting
+// TODO: energy preservation
+
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
     Voxel voxel = getVoxel(index);
@@ -77,12 +80,13 @@ void main() {
             continue;
         }
 
-        float weight = 1.0; // TODO: cos-angle
+        // cos-angle weight for diffuse surfaces
+        float weight = dot(normal, normalize(rayCast.position - position));
         color += weight * getColor(getVoxel(rayCast.voxelIndex));
         samples += 1;
     }
     if (samples > 0) {
-        const float BLEND_FACTOR = 0.1;
+        const float BLEND_FACTOR = 0.01;
 
         color /= samples;
         setColor(index, mix(getColor(voxel), color, BLEND_FACTOR));
