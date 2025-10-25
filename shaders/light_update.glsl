@@ -6,6 +6,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "common.glsl"
 
 const uint RANDOM_DIRECTION_COUNT = 256;
+const uint RAYS_PER_FRAME = 16;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
@@ -50,32 +51,42 @@ void main() {
     }
 
     uint seed = hash(uvec4(gl_GlobalInvocationID, frameNumber));
-    vec3 direction = randomDirections[umod(seed, RANDOM_DIRECTION_COUNT)].xyz;
-    vec3 normal = voxelNormal(direction);
-    // using the normal as offset (plus a small epsilon) ensures the ray origin
-    // is not in the same voxel
-    vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
-    Ray ray = Ray(position, direction);
+    vec3 color = vec3(0.0);
+    uint samples = 0;
 
-    // FIXME: some positions are always out of bounds, others always in walls...
+    for (int i = 0; i < RAYS_PER_FRAME; i++) {
+        vec3 direction = randomDirections[umod(seed + i, RANDOM_DIRECTION_COUNT)].xyz;
+        vec3 normal = voxelNormal(direction);
+        // using the normal as offset (plus a small epsilon) ensures the ray origin
+        // is not in the same voxel
+        vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
+        Ray ray = Ray(position, direction);
 
-    if (isOutOfBounds(ray.origin)) {
-        // TODO: proper skybox or sky color function
-        return;
+        // FIXME: some positions are always out of bounds, others always in walls...
+
+        if (isOutOfBounds(ray.origin)) {
+            // TODO: proper skybox or sky color function
+            continue;
+        }
+        // fix light leaking through 2+ voxel thick walls
+        if (isSolid(getVoxel(ivec3(position)))) {
+            continue;
+        }
+        RayCast rayCast = rayCast(ray);
+
+        if (!rayCast.hit) {
+            // TODO: proper skybox or sky color function
+            continue;
+        }
+
+        float weight = 1.0; // TODO: cos-angle
+        color += weight * getColor(getVoxel(rayCast.voxelIndex));
+        samples += 1;
     }
-    // fix light leaking through 2+ voxel thick walls
-    if (isSolid(getVoxel(ivec3(position)))) {
-        return;
-    }
-    RayCast rayCast = rayCast(ray);
+    if (samples > 0) {
+        const float BLEND_FACTOR = 0.1;
 
-    if (!rayCast.hit) {
-        // TODO: proper skybox or sky color function
-        return;
+        color /= samples;
+        setColor(index, mix(getColor(voxel), color, BLEND_FACTOR));
     }
-    const float BLEND_FACTOR = 0.01;
-
-    float weight = 1.0; // TODO: cos-angle
-    vec3 color = weight * getColor(getVoxel(rayCast.voxelIndex));
-    setColor(index, mix(getColor(voxel), color, BLEND_FACTOR));
 }
