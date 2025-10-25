@@ -19,6 +19,22 @@ uint umod(uint n, uint m) {
     return n - (n / m) * m;
 }
 
+// Returns the normal of the face that a ray from the center of the voxel
+// with direction OUT_DIRECTION goes through.
+vec3 voxelNormal(vec3 outDirection) {
+    vec3 dir = abs(outDirection);
+    // normal is that of one of six faces, of three dimensions (d)
+    int d = 2;
+    if (dir.x > dir.y) {
+        if (dir.x > dir.z) d = 0;
+    } else {
+        if (dir.y > dir.z) d = 1;
+    }
+    vec3 norm = vec3(0.0);
+    norm[d] = sign(outDirection)[d];
+    return norm;
+}
+
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
     Voxel voxel = getVoxel(index);
@@ -33,14 +49,18 @@ void main() {
         return;
     }
 
-    vec3 color = getColor(voxel);
-    vec3 direction = randomDirections[umod(frameNumber, RANDOM_DIRECTION_COUNT)].xyz;
-    vec3 position = vec3(index) + direction; // TODO: ensure position is not in the same voxel
+    uint seed = hash(uvec4(gl_GlobalInvocationID, frameNumber));
+    vec3 direction = randomDirections[umod(seed, RANDOM_DIRECTION_COUNT)].xyz;
+    vec3 normal = voxelNormal(direction);
+    // using the normal as offset (plus a small epsilon) ensures the ray origin
+    // is not in the same voxel
+    vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
     Ray ray = Ray(position, direction);
 
     // FIXME: some positions are always out of bounds, others always in walls...
 
     if (isOutOfBounds(ray.origin)) {
+        // TODO: proper skybox or sky color function
         return;
     }
     // fix light leaking through 2+ voxel thick walls
@@ -50,15 +70,12 @@ void main() {
     RayCast rayCast = rayCast(ray);
 
     if (!rayCast.hit) {
-        // sky color
         // TODO: proper skybox or sky color function
-        setColor(index, SKY_COLOR);
         return;
     }
     const float BLEND_FACTOR = 0.01;
-    float weight = 1.0; // TODO: cos-angle
-    color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), BLEND_FACTOR);
-    // color = vec3(rayCast.steps / 10.0);
 
-    setColor(index, color);
+    float weight = 1.0; // TODO: cos-angle
+    vec3 color = weight * getColor(getVoxel(rayCast.voxelIndex));
+    setColor(index, mix(getColor(voxel), color, BLEND_FACTOR));
 }

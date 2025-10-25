@@ -20,7 +20,8 @@ layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
-const vec3 SKY_COLOR = vec3(0.2, 0.2, 0.7);
+// const vec3 SKY_COLOR = vec3(0.2, 0.2, 0.7);
+const vec3 SKY_COLOR = vec3(0.0);
 const vec3 ERROR_COLOR = vec3(1.0, 0.0, 1.0); // magenta
 
 bool bitFlag(uint flags, uint index) {
@@ -120,3 +121,12 @@ uint hash(uint x) {
     return x;
 }
 
+// murmurHash14 from https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a
+uint hash(uvec4 src) {
+    const uint M = 0x5bd1e995u;
+    uint h = 1190494759u;
+    src *= M; src ^= src>>24u; src *= M;
+    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z; h *= M; h ^= src.w;
+    h ^= h>>13u; h *= M; h ^= h>>15u;
+    return h;
+}
