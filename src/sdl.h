@@ -3,9 +3,7 @@
 #include "input.h"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#include <chrono>
 #include <iostream>
-#include <thread>
 
 // Assumes App has functions init(), update(InputState& inputs, float deltaTime), destroy()
 template <typename App>
