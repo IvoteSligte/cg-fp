@@ -81,10 +81,11 @@ bool App::initShaders()
     return true;
 }
 
-bool App::init()
+bool App::init(uint width, uint height)
 {
     chunk.init();
     initRandomDirections();
+    camera = Camera { glm::vec3(CHUNK_SIZE) / 2.0f, width, height };
 
     std::cout << "Initializing OpenGL." << std::endl;
     // TODO: error handling (with glIsBuffers for buffers)
@@ -102,6 +103,12 @@ bool App::init()
     // --- shaders ---
     std::cout << "Finished initializing OpenGL state." << std::endl;
     return true;
+}
+
+void App::resize(uint newWidth, uint newHeight)
+{
+    glViewport(0, 0, newWidth, newHeight);
+    camera.resize(newWidth, newHeight);
 }
 
 void App::destroy()
@@ -144,6 +151,7 @@ bool App::update(InputState& inputs, float deltaTime)
         glUniform1ui(renderProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
         glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(camera.getPosition()));
         glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(glm::inverse(camera.getRotation())));
+        glUniform1f(renderProgram.getUniformLocation("aspectRatio"), camera.getAspectRatio());
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
     frameNumber += 1;

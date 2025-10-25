@@ -1,6 +1,12 @@
 #include "camera.h"
 #include <glm/gtc/quaternion.hpp>
 
+void Camera::resize(uint newWidth, uint newHeight)
+{
+    width = newWidth;
+    height = newHeight;
+}
+
 void Camera::update(InputState& inputs, float deltaTime)
 {
     const float MOVEMENT_SPEED = 0.01;
@@ -14,6 +20,7 @@ void Camera::update(InputState& inputs, float deltaTime)
     glm::mat3 rotation = getRotation();
     glm::vec3 right = rotation[0];
     glm::vec3 forward = -rotation[2];
+    // FIXME: weird snapping when rotating diagonally (=not along pitch or yaw)
 
     // update position
     if (inputs.isHeld(SDLK_w)) {
@@ -44,4 +51,9 @@ glm::mat3 Camera::getRotation()
     glm::vec3 right = yawRotation * RIGHT;
     glm::quat pitchRotation = glm::angleAxis(pitch, right);
     return glm::mat3_cast(glm::normalize(pitchRotation * yawRotation));
+}
+
+float Camera::getAspectRatio()
+{
+    return (float)width / height;
 }

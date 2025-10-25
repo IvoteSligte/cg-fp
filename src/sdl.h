@@ -68,7 +68,7 @@ bool SDLState<App>::init()
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    if (!app.init())
+    if (!app.init(width, height))
         return false;
 
     initialized = true;
@@ -135,8 +135,7 @@ void SDLState<App>::run()
             case SDL_WINDOWEVENT_RESIZED:
                 width = event.window.data1;
                 height = event.window.data2;
-                // update OpenGL viewport size
-                glViewport(0, 0, width, height);
+                resized = true;
                 break;
             case SDL_QUIT:
                 running = false;
@@ -144,6 +143,8 @@ void SDLState<App>::run()
             }
         }
 
+        app.resize(width, height);
+        resized = false;
         if (!app.update(inputs, deltaTime))
             break;
         SDL_GL_SwapWindow(window);

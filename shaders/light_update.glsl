@@ -6,7 +6,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "common.glsl"
 
 const uint RANDOM_DIRECTION_COUNT = 256;
-const uint RAYS_PER_FRAME = 128;
+const uint RAYS_PER_FRAME = 64;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 

@@ -14,7 +14,10 @@ public:
     {
     }
 
-    bool init();
+    // Initialize app with window width and height.
+    bool init(uint width, uint height);
+    // Resize the viewport.
+    void resize(uint newWidth, uint newHeight);
     bool update(InputState& inputs, float deltaTime);
     void destroy();
 
@@ -25,7 +28,7 @@ private:
     bool initShaders();
 
     Chunk chunk;
-    Camera camera { glm::vec3(CHUNK_SIZE) / 2.0f };
+    Camera camera { glm::vec3(CHUNK_SIZE) / 2.0f, 800, 600 };
     // NOTE: uses vec4 instead of vec3 to ensure 16-byte alignment
     // which is what vec3[] uses in a shader
     glm::vec4 randomDirections[RANDOM_DIRECTION_COUNT];

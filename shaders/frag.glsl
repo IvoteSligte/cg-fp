@@ -10,11 +10,10 @@ out vec4 fragColor;
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 layout(location = 1) uniform vec3 position;
 layout(location = 2) uniform mat3 rotation;
+layout(location = 3) uniform float aspectRatio;
 
 void main() {
-    vec2 aspectRatio = vec2(1.0); // TODO:
-    
-    vec2 screenPos = (fragPos * 2.0 - 1.0) * aspectRatio;
+    vec2 screenPos = (fragPos * 2.0 - 1.0) * vec2(aspectRatio, 1.0);
     vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, -1.0));
     // TODO: just set position of character to CHUNK_WIDTH/2
     Ray ray = Ray(position, direction);
