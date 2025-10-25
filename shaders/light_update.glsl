@@ -25,9 +25,11 @@ void main() {
     }
 
     vec3 color = getColor(voxel);
-    vec3 direction = vec3(1.1, 0.0, 0.0);
-    vec3 position = vec3(index) + randomDirection(frameNumber); // TODO: ensure position is not in the same voxel
+    vec3 direction = randomDirection(frameNumber);
+    vec3 position = vec3(index) + direction; // TODO: ensure position is not in the same voxel
     Ray ray = Ray(position, direction);
+
+    // FIXME: some positions are always out of bounds, others always in walls...
 
     if (isOutOfBounds(ray.origin)) {
         return;
@@ -44,8 +46,10 @@ void main() {
         setColor(index, SKY_COLOR);
         return;
     }
+    const float BLEND_FACTOR = 0.01;
     float weight = 1.0; // TODO: cos-angle
-    color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), 0.01);
+    color = mix(color, weight * getColor(getVoxel(rayCast.voxelIndex)), BLEND_FACTOR);
+    // color = vec3(rayCast.steps / 10.0);
 
     setColor(index, color);
 }
