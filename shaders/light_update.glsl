@@ -20,24 +20,7 @@ uint umod(uint n, uint m) {
     return n - (n / m) * m;
 }
 
-// Returns the normal of the face that a ray from the center of the voxel
-// with direction OUT_DIRECTION goes through.
-vec3 voxelNormal(vec3 outDirection) {
-    vec3 dir = abs(outDirection);
-    // normal is that of one of six faces, of three dimensions (d)
-    int d = 2;
-    if (dir.x > dir.y) {
-        if (dir.x > dir.z) d = 0;
-    } else {
-        if (dir.y > dir.z) d = 1;
-    }
-    vec3 norm = vec3(0.0);
-    norm[d] = sign(outDirection)[d];
-    return norm;
-}
-
-// TODO: per-face lighting
-// TODO: energy preservation
+// TODO: energy preservation or falloff term
 // TODO: specular and translucent surfaces?
 
 void main() {
@@ -50,19 +33,29 @@ void main() {
     }
     if (voxel.emission != vec3(0.0)) {
         // TODO: do not early exit and just add to color, also preserve energy
-        setColor(index, voxel.emission);
+        for (uint face = 0; face < 6; face++) {
+            setColor(index, face, voxel.emission);
+        }
         return;
     }
 
     uint seed = hash(uvec4(gl_GlobalInvocationID, frameNumber));
-    vec3 color = vec3(0.0);
-    uint samples = 0;
+
+    // storing a vec3[6] and uint[6] as locals takes a lot of registers
+    // and will likely cause thrashing but we ignore that for now
+    vec3 faceColor[6];
+    uint faceSamples[6];
+    for (int face = 0; face < 6; face++) {
+        faceColor[face] = vec3(0.0);
+        faceSamples[face] = 0;
+    }
 
     // FIXME: weird light falloff based on distance?
 
     for (int i = 0; i < RAYS_PER_FRAME; i++) {
         vec3 direction = randomDirections[umod(seed + i, RANDOM_DIRECTION_COUNT)].xyz;
         vec3 normal = voxelNormal(direction);
+        uint face = faceVoxelNormal(direction);
         // using the normal as offset (plus a small epsilon) ensures the ray origin
         // is not in the same voxel
         vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
@@ -83,13 +76,19 @@ void main() {
             continue;
         }
         // cos-angle weight for diffuse surfaces
-        float weight = dot(normal, normalize(rayCast.position - position));
-        color += weight * getColor(getVoxel(rayCast.voxelIndex)) * voxel.diffuse;
-        samples += 1;
+        // float weight = dot(normal, normalize(rayCast.position - position));
+        float weight = 1.0; // TEMP
+        faceColor[face] += weight * getColor(getVoxel(rayCast.voxelIndex), rayCast.face) * voxel.diffuse;
+        faceSamples[face] += 1;
     }
-    if (samples > 0) {
-        color /= samples;
-        float blendFactor = 1.0 / (frameNumber + 1.0);
-        setColor(index, mix(getColor(voxel), color, blendFactor));
+    float blendFactor = 1.0 / (frameNumber + 1.0);
+
+    for (int face = 0; face < 6; face++) {
+        uint samples = faceSamples[face];
+        vec3 color = faceColor[face];
+        if (samples > 0) {
+            color /= samples;
+            setColor(index, face, mix(getColor(voxel, face), color, blendFactor));
+        }
     }
 }

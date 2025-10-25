@@ -5,9 +5,9 @@ layout(location = 0) uniform uint dbColorReadIdx;
 struct Voxel {
     vec3 emission;
     vec3 diffuse;
-    // Double-buffered color.
+    // Double-buffered color per face.
     // The read index is indicated by dbColorReadIdx.
-    vec3 dbColor[2];
+    vec3 dbFaceColor[6][2];
     // bit 0 set indicates that the voxel exists
     uint flags;
 };
@@ -37,13 +37,13 @@ bool isSolid(Voxel voxel) {
     return bitFlag(voxel.flags, 0);
 }
 
-vec3 getColor(Voxel voxel) {
-    return voxel.dbColor[dbColorReadIdx];
+vec3 getColor(Voxel voxel, uint face) {
+    return voxel.dbFaceColor[face][dbColorReadIdx];
 }
 
-void setColor(ivec3 index, vec3 color) {
+void setColor(ivec3 index, uint face, vec3 color) {
     uint writeIdx = 1 - dbColorReadIdx;
-    chunk.voxels[index.x][index.y][index.z].dbColor[writeIdx] = color;
+    chunk.voxels[index.x][index.y][index.z].dbFaceColor[face][writeIdx] = color;
 }
 
 struct Ray {
@@ -55,7 +55,7 @@ struct RayCast {
     bool hit;
     vec3 position;
     ivec3 voxelIndex;
-    int steps;
+    uint face;
 };
 
 bool isOutOfBounds(vec3 position) {
@@ -75,6 +75,34 @@ vec3 invert(vec3 v) {
     );
 }
 
+// Returns outDirection snapped to the nearest voxel face.
+vec3 voxelNormal(vec3 outDirection) {
+    vec3 dir = abs(outDirection);
+    // normal is that of one of six faces, of three dimensions (d)
+    int d = 2;
+    if (dir.x > dir.y) {
+        if (dir.x > dir.z) d = 0;
+    } else {
+        if (dir.y > dir.z) d = 1;
+    }
+    vec3 norm = vec3(0.0);
+    norm[d] = sign(outDirection)[d];
+    return norm;
+}
+
+// Returns an integer representing the face of a voxel based on the normal.
+uint faceVoxelNormal(vec3 outDirection) {
+    vec3 dir = abs(outDirection);
+    // normal is that of one of six faces, of three dimensions (d)
+    int d = 2;
+    if (dir.x > dir.y) {
+        if (dir.x > dir.z) d = 0;
+    } else {
+        if (dir.y > dir.z) d = 1;
+    }
+    return d * 2 + uint(outDirection[d] > 0);
+}
+
 // Casts a ray, returning hit information.
 // Assumes ray.position is within the chunk.
 RayCast rayCast(Ray ray) {
@@ -86,21 +114,24 @@ RayCast rayCast(Ray ray) {
     // relative boundary of the next voxel
     vec3 boundary = max(step, vec3(0.0));
     vec3 t = (boundary - fract(ray.origin)) * invDirection;
+    // dimension along which the last step was taken
+    uint dim = 0;
 
-    int i = 0;
     while (true) {
         // ivec3(position) truncates towards zero and is therefore not the same
         // for negative values
         ivec3 index = ivec3(floor(position));
         if (isOutOfBounds(index)) {
-            return RayCast(false, vec3(0.0), ivec3(0), i);
+            return RayCast(false, vec3(0.0), ivec3(0), 0);
         }
         if (isSolid(getVoxel(index))) {
-            return RayCast(true, position, index, i);
+            // step[dim] < 0 instead of step[dim] > 0
+            // since the normal is in the opposite direction of the last step
+            uint face = dim * 2 + uint(step[dim] < 0);
+            return RayCast(true, position, index, face);
         }
-        i += 1;
 
-        int dim = 2;
+        dim = 2;
         if (t.x < t.y) {
             if (t.x < t.z) dim = 0;
         } else {

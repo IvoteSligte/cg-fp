@@ -30,14 +30,20 @@ const GLfloat QUAD_VERTICES[] = {
     1.0, -1.0
 };
 
+// OpenGL (std140 and std430) array elements are 16-byte aligned,
+// which C++ does not like, so force it with a wrapper.
+struct alignas(16) Vec3_16B {
+    glm::vec3 color;
+};
+
 // mirrored with shaders
 // alignas(16) is necessary to prevent layout optimizations
 struct alignas(16) Voxel {
     alignas(16) glm::vec3 emission;
     alignas(16) glm::vec3 diffuse;
-    // Double-buffered color.
+    // Double-buffered color per face.
     // The read index is indicated by dbColorReadIdx.
-    alignas(16) glm::vec3 dbColor[2];
+    alignas(16) Vec3_16B dbFaceColor[6][2];
     // bit 0 set indicates that the voxel exists
     alignas(16) glm::uint flags;
 };
@@ -59,7 +65,7 @@ inline Voxel invertedSphereScene(glm::uvec3 point)
     return Voxel {
         .emission = glm::vec3(randf() < 0.03, randf() < 0.03, randf() < 0.03),
         .diffuse = glm::vec3(1.0f),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = glm::length(glm::vec3(point) - center) > radius ? 1u : 0u,
     };
 }
@@ -70,7 +76,7 @@ inline Voxel simpleScene(glm::uvec3 point)
     const Voxel WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(1.0),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
     const Voxel AIR = Voxel {
@@ -79,7 +85,7 @@ inline Voxel simpleScene(glm::uvec3 point)
     const Voxel LIGHT = Voxel {
         .emission = glm::vec3(1.0, 0.9, 0.7),
         .diffuse = glm::vec3(0.0),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
 
@@ -112,25 +118,25 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     const Voxel RED_WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(1.0f, 0.0f, 0.0f),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
     const Voxel GREEN_WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(0.0f, 1.0f, 0.0f),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
     const Voxel WHITE_WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(1.0f),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
     const Voxel CUBE = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(0.9f),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
     const Voxel AIR = Voxel {
@@ -139,7 +145,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     const Voxel LIGHT = Voxel {
         .emission = glm::vec3(5.0f),
         .diffuse = glm::vec3(0.0),
-        .dbColor = {},
+        .dbFaceColor = {},
         .flags = 1u,
     };
 

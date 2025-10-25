@@ -43,6 +43,7 @@ void App::initFullScreenQuad()
     // each element is 2 times GL_FLOAT since each vec2 is two GL_FLOATs
     glVertexAttribPointer(posAttr, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(posAttr);
+    // TODO: usage hint GL_STATIC_DRAW
 }
 
 void App::initChunkBuffer()
@@ -52,6 +53,7 @@ void App::initChunkBuffer()
     assert(glIsBuffer(storageBuffer));
     glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
+    // TODO: usage hint GL_DYNAMIC_DRAW
 }
 
 bool App::initShaders()

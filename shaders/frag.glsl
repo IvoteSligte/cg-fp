@@ -29,7 +29,8 @@ void main() {
 
     if (rayCast.hit) {
         ivec3 index = rayCast.voxelIndex;
-        color = getColor(getVoxel(index));
+        Voxel hitVoxel = getVoxel(index);
+        color = getColor(hitVoxel, rayCast.face);
     } else {
         color = SKY_COLOR;
     }
