@@ -107,6 +107,7 @@ void SDLState<App>::run()
         // get window width/height
         int width;
         int height;
+        bool resized = false;
         SDL_GetWindowSize(window, &width, &height);
 
         // clear inputs for start of frame
@@ -130,6 +131,12 @@ void SDLState<App>::run()
                 break;
             case SDL_MOUSEMOTION:
                 inputs.mouseDelta = glm::vec2((float)event.motion.xrel / width, (float)event.motion.yrel / height) * deltaTime;
+                break;
+            case SDL_WINDOWEVENT_RESIZED:
+                width = event.window.data1;
+                height = event.window.data2;
+                // update OpenGL viewport size
+                glViewport(0, 0, width, height);
                 break;
             case SDL_QUIT:
                 running = false;

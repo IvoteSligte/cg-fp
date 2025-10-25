@@ -76,8 +76,7 @@ void main() {
             continue;
         }
         // cos-angle weight for diffuse surfaces
-        // float weight = dot(normal, normalize(rayCast.position - position));
-        float weight = 1.0; // TEMP
+        float weight = dot(normal, normalize(rayCast.position - position));
         faceColor[face] += weight * getColor(getVoxel(rayCast.voxelIndex), rayCast.face) * voxel.diffuse;
         faceSamples[face] += 1;
     }
