@@ -62,8 +62,6 @@ void main() {
         vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
         Ray ray = Ray(position, direction);
 
-        // FIXME: some positions are always out of bounds, others always in walls...
-
         if (isOutOfBounds(ray.origin)) {
             // TODO: proper skybox or sky color function
             continue;
