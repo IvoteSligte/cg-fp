@@ -99,9 +99,16 @@ inline Voxel simpleScene(glm::uvec3 point)
     return AIR;
 }
 
+static inline bool isInCube(glm::uvec3 point, glm::uvec3 cubeMin, glm::uvec3 cubeMax)
+{
+    return glm::all(glm::greaterThanEqual(point, cubeMin))
+        && glm::all(glm::lessThanEqual(point, cubeMax));
+}
+
 // The Cornell box.
 inline Voxel cornellBoxScene(glm::uvec3 point)
 {
+    const auto N = CHUNK_SIZE;
     const Voxel RED_WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(1.0f, 0.0f, 0.0f),
@@ -120,6 +127,12 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
         .dbColor = {},
         .flags = 1u,
     };
+    const Voxel CUBE = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(0.9f),
+        .dbColor = {},
+        .flags = 1u,
+    };
     const Voxel AIR = Voxel {
         .flags = 0u,
     };
@@ -130,9 +143,13 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
         .flags = 1u,
     };
 
-    glm::uvec3 lightPosition = glm::uvec3(CHUNK_SIZE / 2, CHUNK_SIZE - 1, CHUNK_SIZE / 2);
-    glm::uint lightHalfWidth = CHUNK_SIZE / 8;
-    uint max = CHUNK_SIZE - 1;
+    glm::uvec3 lightPosition = glm::uvec3(N / 2, N - 1, N / 2);
+    glm::uint lightHalfWidth = N / 8;
+    glm::uvec3 cube1min = glm::uvec3(N / 4, 1, N / 6);
+    glm::uvec3 cube1max = cube1min + glm::uvec3(N / 6, N / 2, N / 5);
+    glm::uvec3 cube2min = glm::uvec3(N - N / 2, 1, N / 3);
+    glm::uvec3 cube2max = cube2min + glm::uvec3(N / 5, N / 4, N / 5);
+    uint max = N - 1;
 
     if (point.x == 0) {
         return RED_WALL;
@@ -141,12 +158,18 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
         return GREEN_WALL;
     }
     if (point.y == max
-        && abs(point.x - CHUNK_SIZE / 2) < lightHalfWidth
-        && abs(point.z - CHUNK_SIZE / 2) < lightHalfWidth) {
+        && abs(point.x - N / 2) < lightHalfWidth
+        && abs(point.z - N / 2) < lightHalfWidth) {
         return LIGHT;
     }
     if (point.y == 0 || point.z == 0 || point.y == max || point.z == max) {
         return WHITE_WALL;
+    }
+    if (isInCube(point, cube1min, cube1max)) {
+        return CUBE;
+    }
+    if (isInCube(point, cube2min, cube2max)) {
+        return CUBE;
     }
     return AIR;
 }
