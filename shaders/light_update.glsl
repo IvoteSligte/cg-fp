@@ -58,6 +58,8 @@ void main() {
     vec3 color = vec3(0.0);
     uint samples = 0;
 
+    // FIXME: weird light falloff based on distance?
+
     for (int i = 0; i < RAYS_PER_FRAME; i++) {
         vec3 direction = randomDirections[umod(seed + i, RANDOM_DIRECTION_COUNT)].xyz;
         vec3 normal = voxelNormal(direction);
@@ -80,10 +82,9 @@ void main() {
             // TODO: proper skybox or sky color function
             continue;
         }
-
         // cos-angle weight for diffuse surfaces
         float weight = dot(normal, normalize(rayCast.position - position));
-        color += weight * getColor(getVoxel(rayCast.voxelIndex));
+        color += weight * getColor(getVoxel(rayCast.voxelIndex)) * voxel.diffuse;
         samples += 1;
     }
     if (samples > 0) {

@@ -99,6 +99,58 @@ inline Voxel simpleScene(glm::uvec3 point)
     return AIR;
 }
 
+// The Cornell box.
+inline Voxel cornellBoxScene(glm::uvec3 point)
+{
+    const Voxel RED_WALL = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(1.0f, 0.0f, 0.0f),
+        .dbColor = {},
+        .flags = 1u,
+    };
+    const Voxel GREEN_WALL = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(0.0f, 1.0f, 0.0f),
+        .dbColor = {},
+        .flags = 1u,
+    };
+    const Voxel WHITE_WALL = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(1.0f),
+        .dbColor = {},
+        .flags = 1u,
+    };
+    const Voxel AIR = Voxel {
+        .flags = 0u,
+    };
+    const Voxel LIGHT = Voxel {
+        .emission = glm::vec3(5.0f),
+        .diffuse = glm::vec3(0.0),
+        .dbColor = {},
+        .flags = 1u,
+    };
+
+    glm::uvec3 lightPosition = glm::uvec3(CHUNK_SIZE / 2, CHUNK_SIZE - 1, CHUNK_SIZE / 2);
+    glm::uint lightHalfWidth = CHUNK_SIZE / 8;
+    uint max = CHUNK_SIZE - 1;
+
+    if (point.x == 0) {
+        return RED_WALL;
+    }
+    if (point.x == max) {
+        return GREEN_WALL;
+    }
+    if (point.y == max
+        && abs(point.x - CHUNK_SIZE / 2) < lightHalfWidth
+        && abs(point.z - CHUNK_SIZE / 2) < lightHalfWidth) {
+        return LIGHT;
+    }
+    if (point.y == 0 || point.z == 0 || point.y == max || point.z == max) {
+        return WHITE_WALL;
+    }
+    return AIR;
+}
+
 // mirrored in frag.glsl
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
@@ -110,7 +162,7 @@ struct Chunk {
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    voxels[x][y][z] = simpleScene(glm::uvec3(x, y, z));
+                    voxels[x][y][z] = cornellBoxScene(glm::uvec3(x, y, z));
                 };
             }
         }
