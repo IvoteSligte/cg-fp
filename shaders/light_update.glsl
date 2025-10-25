@@ -6,7 +6,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "common.glsl"
 
 const uint RANDOM_DIRECTION_COUNT = 256;
-const uint RAYS_PER_FRAME = 16;
+const uint RAYS_PER_FRAME = 128;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
@@ -38,6 +38,7 @@ vec3 voxelNormal(vec3 outDirection) {
 
 // TODO: per-face lighting
 // TODO: energy preservation
+// TODO: specular and translucent surfaces?
 
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
@@ -86,9 +87,8 @@ void main() {
         samples += 1;
     }
     if (samples > 0) {
-        const float BLEND_FACTOR = 0.01;
-
         color /= samples;
-        setColor(index, mix(getColor(voxel), color, BLEND_FACTOR));
+        float blendFactor = 1.0 / (frameNumber + 1.0);
+        setColor(index, mix(getColor(voxel), color, blendFactor));
     }
 }

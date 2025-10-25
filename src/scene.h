@@ -50,18 +50,21 @@ const long CHUNK_SIZE = 32;
 const int STORAGE_BUFFER_BINDING = 0;
 const glm::uvec3 WORKGROUP_SIZE = glm::uvec3(8, 8, 8);
 
+// Scene where an inverted sphere represents the solid voxels and emissive voxels
+// are randomly chosen.
 inline Voxel invertedSphereScene(glm::uvec3 point)
 {
     glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
     float radius = (float)CHUNK_SIZE / 2.0 - 1.0;
     return Voxel {
-        .emission = glm::vec3(randf() < 0.01, randf() < 0.01, randf() < 0.01),
-        .diffuse = glm::vec3(0.5f) + 0.2f * glm::vec3(randf(), randf(), randf()),
+        .emission = glm::vec3(randf() < 0.03, randf() < 0.03, randf() < 0.03),
+        .diffuse = glm::vec3(1.0f),
         .dbColor = {},
         .flags = glm::length(glm::vec3(point) - center) > radius ? 1u : 0u,
     };
 }
 
+// Scene with a simple central light source and walls against the chunk boundaries.
 inline Voxel simpleScene(glm::uvec3 point)
 {
     const Voxel WALL = Voxel {
