@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util.h"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
@@ -15,7 +16,6 @@
 #include <glm/vec3.hpp>
 #include <iostream>
 #include <map>
-#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -49,13 +49,6 @@ const long CHUNK_SIZE = 32;
 // mirrored with shaders
 const int STORAGE_BUFFER_BINDING = 0;
 const glm::uvec3 WORKGROUP_SIZE = glm::uvec3(8, 8, 8);
-
-inline float randf()
-{
-    auto gen = std::mt19937(std::random_device {}());
-    auto dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
-    return dist(gen);
-}
 
 inline Voxel invertedSphereScene(glm::uvec3 point)
 {

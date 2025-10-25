@@ -4,22 +4,30 @@
 #include "scene.h"
 #include "shader.h"
 
+// mirrored in light_update.glsl
+const glm::uint RANDOM_DIRECTION_COUNT = 256;
+
 class App {
 public:
     App()
     {
     }
 
+    bool init();
+    bool update(InputState& inputs, float deltaTime);
+    void destroy();
+
+private:
+    void initRandomDirections();
     void initFullScreenQuad();
     void initChunkBuffer();
     bool initShaders();
-    bool init();
-    void destroy();
-    bool update(InputState& inputs, float deltaTime);
 
-private:
     Chunk chunk;
     Camera camera { glm::vec3(CHUNK_SIZE) / 2.0f };
+    // NOTE: uses vec4 instead of vec3 to ensure 16-byte alignment
+    // which is what vec3[] uses in a shader
+    glm::vec4 randomDirections[RANDOM_DIRECTION_COUNT];
 
     ShaderProgram voxelProgram;
     ShaderProgram renderProgram;

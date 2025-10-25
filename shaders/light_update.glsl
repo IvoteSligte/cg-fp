@@ -5,10 +5,19 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 #include "common.glsl"
 
+const uint RANDOM_DIRECTION_COUNT = 256;
+
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
 // number of frames since start
 layout(location = 1) uniform uint frameNumber;
+// vec4 for randomDirections to ensure 16-byte alignment
+layout(location = 2) uniform vec4 randomDirections[RANDOM_DIRECTION_COUNT];
+
+// uses integer rounding to calculate the uint modulo `n mod m`
+uint umod(uint n, uint m) {
+    return n - (n / m) * m;
+}
 
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
@@ -25,7 +34,7 @@ void main() {
     }
 
     vec3 color = getColor(voxel);
-    vec3 direction = randomDirection(frameNumber);
+    vec3 direction = randomDirections[umod(frameNumber, RANDOM_DIRECTION_COUNT)].xyz;
     vec3 position = vec3(index) + direction; // TODO: ensure position is not in the same voxel
     Ray ray = Ray(position, direction);
 

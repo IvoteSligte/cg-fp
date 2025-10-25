@@ -1,6 +1,8 @@
 #include "app.h"
 #include "scene.h"
 #include "shader.h"
+#include "util.h"
+#include <glm/geometric.hpp>
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
 {
@@ -12,6 +14,19 @@ void setupDebugInfo()
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugCallback, nullptr);
+}
+
+void App::initRandomDirections()
+{
+    for (size_t i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
+        randomDirections[i] = glm::vec4(
+            glm::normalize(glm::vec3(
+                randf_normal(),
+                randf_normal(),
+                randf_normal())),
+            // 0.0f as padding between array elements
+            0.0f);
+    }
 }
 
 void App::initFullScreenQuad()
@@ -65,6 +80,7 @@ bool App::initShaders()
 bool App::init()
 {
     chunk.init();
+    initRandomDirections();
 
     std::cout << "Initializing OpenGL." << std::endl;
     // TODO: error handling (with glIsBuffers for buffers)
@@ -107,6 +123,7 @@ bool App::update(InputState& inputs, float deltaTime)
         voxelProgram.use();
         glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
         glUniform1ui(voxelProgram.getUniformLocation("frameNumber"), frameNumber);
+        glUniform4fv(voxelProgram.getUniformLocation("randomDirections"), RANDOM_DIRECTION_COUNT, glm::value_ptr(randomDirections[0]));
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
     }
     // swap double buffers
