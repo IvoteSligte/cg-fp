@@ -52,6 +52,7 @@ bool addIncludes(const std::string& source, std::string& result)
 // path is the path to the shader file
 GLuint loadShader(GLenum type, const std::string name)
 {
+    std::cout << "Loading shader " << name << std::endl;
     std::string preIncludeSource;
 
     if (!readShader(name, preIncludeSource)) {
@@ -77,6 +78,7 @@ GLuint loadShader(GLenum type, const std::string name)
         return 0; // 0 means invalid OpenGL shader
     }
     assert(glIsShader(id));
+    std::cout << "Successfully loaded shader " << name << std::endl;
     return id;
 }
 
@@ -92,24 +94,33 @@ void reportShaderProgramLog(GLuint shaderProgram)
         std::cerr << buf << std::endl;
 }
 
-bool ShaderProgram::init(std::initializer_list<GLuint> shaders, std::initializer_list<std::pair<std::string, GLuint>> attributes)
+bool ShaderProgram::init(
+    std::initializer_list<GLuint> shaders,
+    std::initializer_list<std::pair<std::string, GLuint>> attributes)
 {
+    std::cout << "Initializing shader program." << std::endl;
+    std::cout << "Checking status of shaders." << std::endl;
     for (auto shader : shaders) {
         assert(glIsShader(shader) == GL_TRUE);
         GLint compiled = GL_FALSE;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
         assert(compiled == GL_TRUE);
     }
+    std::cout << "Creating shader program." << std::endl;
     program = glCreateProgram();
     this->shaders = std::vector(shaders);
+    std::cout << "Attaching shaders." << std::endl;
     for (auto shader : shaders) {
         glAttachShader(program, shader);
     }
+    std::cout << "Binding attributes." << std::endl;
     for (auto attr : attributes) {
         glBindAttribLocation(program, attr.second, attr.first.c_str());
     }
+    std::cout << "Linking shader program." << std::endl;
     glLinkProgram(program);
 
+    std::cout << "Checking linking status." << std::endl;
     // check linking status
     GLint status;
     glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -118,6 +129,7 @@ bool ShaderProgram::init(std::initializer_list<GLuint> shaders, std::initializer
         reportShaderProgramLog(program);
         return false;
     }
+    // NOTE: validation always fails with no error message, despite there being no errors
     // // validate program
     // glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
     // if (status == GL_FALSE) {
@@ -125,6 +137,7 @@ bool ShaderProgram::init(std::initializer_list<GLuint> shaders, std::initializer
     //     reportShaderProgramLog(program);
     //     return false;
     // }
+    std::cout << "Successfully initialized shader program." << std::endl;
     return true;
 }
 

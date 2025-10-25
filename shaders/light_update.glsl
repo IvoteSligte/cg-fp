@@ -81,7 +81,7 @@ void main() {
         faceColor[face] += weight * getColor(getVoxel(rayCast.voxelIndex), rayCast.face) * voxel.diffuse;
         faceSamples[face] += 1;
     }
-    float blendFactor = 1.0 / (frameNumber + 1.0);
+    float blendFactor = max(1.0 / (frameNumber + 1.0), 1e-4);
 
     for (int face = 0; face < 6; face++) {
         uint samples = faceSamples[face];

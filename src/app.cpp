@@ -58,6 +58,7 @@ void App::initChunkBuffer()
 
 bool App::initShaders()
 {
+    std::cout << "Loading and compiling shaders. This may take a minute." << std::endl;
     // compute shader
     {
         GLuint lightUpdateShader = loadShader(GL_COMPUTE_SHADER, "light_update.glsl");
@@ -76,6 +77,7 @@ bool App::initShaders()
             return false;
         }
     }
+    std::cout << "Finished loading shaders." << std::endl;
     return true;
 }
 

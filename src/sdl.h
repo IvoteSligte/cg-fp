@@ -42,7 +42,7 @@ bool SDLState<App>::init()
         return false;
     }
 
-    // initial width and height (TODO: enable resizing)
+    // initial width and height
     int width = 800;
     int height = 600;
 
@@ -51,6 +51,7 @@ bool SDLState<App>::init()
         logSDLError("Failed to create window.");
         return false;
     }
+    SDL_SetWindowResizable(window, SDL_TRUE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     glContext = SDL_GL_CreateContext(window);
     if (glContext == nullptr) {
