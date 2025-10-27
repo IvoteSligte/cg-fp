@@ -11,8 +11,8 @@ const uint RANDOM_DIRECTION_COUNT = 16;
 
 // number of frames since start
 layout(location = 1) uniform uint frameNumber;
-// vec4 for randomDirections to ensure 16-byte alignment
-layout(location = 2) uniform vec4 randomDirections[RANDOM_DIRECTION_COUNT];
+// packed normalized vec3 directions
+layout(location = 2) uniform uint randomDirections[RANDOM_DIRECTION_COUNT];
 
 // TODO: energy preservation or falloff term
 // TODO: specular and translucent surfaces?
@@ -44,7 +44,7 @@ void main() {
     }
 
     for (int i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
-        vec3 direction = randomDirections[i].xyz;
+        vec3 direction = unpackSnorm4x8(randomDirections[i]).xyz;
         vec3 normal = voxelNormal(direction);
         uint face = faceVoxelNormal(direction);
         // 2D offset on face

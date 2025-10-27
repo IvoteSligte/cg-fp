@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "util.h"
 #include <glm/geometric.hpp>
+#include <glm/packing.hpp>
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
 {
@@ -19,13 +20,13 @@ void setupDebugInfo()
 void App::initRandomDirections()
 {
     for (size_t i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
-        randomDirections[i] = glm::vec4(
+        randomDirections[i] = glm::packSnorm4x8(glm::vec4(
             glm::normalize(glm::vec3(
                 randf_normal(),
                 randf_normal(),
                 randf_normal())),
             // 0.0f as padding between array elements
-            0.0f);
+            0.0f));
     }
 }
 
@@ -138,7 +139,7 @@ bool App::update(InputState& inputs, float deltaTime)
         voxelProgram.use();
         glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
         glUniform1ui(voxelProgram.getUniformLocation("frameNumber"), frameNumber);
-        glUniform4fv(voxelProgram.getUniformLocation("randomDirections"), RANDOM_DIRECTION_COUNT, glm::value_ptr(randomDirections[0]));
+        glUniform1uiv(voxelProgram.getUniformLocation("randomDirections"), RANDOM_DIRECTION_COUNT, randomDirections);
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
     }
     // swap double buffers

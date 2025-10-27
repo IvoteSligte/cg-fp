@@ -34,7 +34,7 @@ private:
     Camera camera { glm::vec3(CHUNK_SIZE) / 2.0f, 800, 600 };
     // NOTE: uses vec4 instead of vec3 to ensure 16-byte alignment
     // which is what vec3[] uses in a shader
-    glm::vec4 randomDirections[RANDOM_DIRECTION_COUNT];
+    glm::uint randomDirections[RANDOM_DIRECTION_COUNT];
 
     ShaderProgram voxelProgram;
     ShaderProgram renderProgram;
