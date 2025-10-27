@@ -6,7 +6,7 @@
 
 // mirrored in light_update.glsl
 // NOTE: 512+ causes shader compilation fail
-const glm::uint RANDOM_DIRECTION_COUNT = 256;
+const glm::uint RANDOM_DIRECTION_COUNT = 16;
 
 class App {
 public:
