@@ -23,8 +23,6 @@ bool readShader(const std::string name, std::string& out)
     return true;
 }
 
-// TODO: ensure OpenGL version is at least 4.3 for compute shaders
-
 // Replaces `#include "shader.glsl"` with the shader code itself.
 bool addIncludes(const std::string& source, std::string& result)
 {

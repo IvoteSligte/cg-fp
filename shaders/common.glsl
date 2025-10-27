@@ -1,7 +1,7 @@
 // NOTE: names used for sync with CPU, do not change
 layout(location = 0) uniform uint dbColorReadIdx;
 
-// mirrored with main.cpp
+// mirrored with scene.h
 struct Voxel {
     vec3 emission;
     vec3 diffuse;
@@ -12,10 +12,11 @@ struct Voxel {
     uint flags;
 };
 
-// mirrored with main.cpp
+// mirrored with scene.h
 // size of the voxel chunk in one dimension
 const uint CHUNK_SIZE = 32;
 
+// mirrored with scene.h
 layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
@@ -65,15 +66,6 @@ bool isOutOfBounds(ivec3 position) {
     return any(lessThan(position, ivec3(0))) || any(greaterThanEqual(position, ivec3(CHUNK_SIZE)));
 }
 
-// 1.0 / vector, mapping zero-dimensions to 1e30
-vec3 invert(vec3 v) {
-    return vec3(
-        v.x == 0 ? 1e30 : 1.0 / v.x,
-        v.y == 0 ? 1e30 : 1.0 / v.y,
-        v.z == 0 ? 1e30 : 1.0 / v.z
-    );
-}
-
 // Returns outDirection snapped to the nearest voxel face.
 vec3 voxelNormal(vec3 outDirection) {
     vec3 dir = abs(outDirection);
@@ -100,6 +92,15 @@ uint faceVoxelNormal(vec3 outDirection) {
         if (dir.y > dir.z) d = 1;
     }
     return d * 2 + uint(outDirection[d] > 0);
+}
+
+// 1.0 / vector, mapping zero-dimensions to 1e30
+vec3 invert(vec3 v) {
+    return vec3(
+        v.x == 0 ? 1e30 : 1.0 / v.x,
+        v.y == 0 ? 1e30 : 1.0 / v.y,
+        v.z == 0 ? 1e30 : 1.0 / v.z
+    );
 }
 
 // Casts a ray, returning hit information.
@@ -141,14 +142,9 @@ RayCast rayCast(Ray ray) {
     }
 }
 
-// lowbias32 from https://nullprogram.com/blog/2018/07/31/
-uint hash(uint x) {
-    x ^= x >> 16;
-    x *= 0x7feb352dU;
-    x ^= x >> 15;
-    x *= 0x846ca68bU;
-    x ^= x >> 16;
-    return x;
+// uses integer rounding to calculate the uint modulo `n mod m`
+uint umod(uint n, uint m) {
+    return n - (n / m) * m;
 }
 
 // murmurHash14 from https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a

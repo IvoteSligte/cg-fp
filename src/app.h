@@ -23,8 +23,11 @@ public:
 
 private:
     void initRandomDirections();
+    // Initializes the vertex buffer with a full-screen quad.
     void initFullScreenQuad();
-    void initChunkBuffer();
+    // Initializes the chunk and associated buffer.
+    void initChunk();
+    // Loads shaders and creates the shader programs.
     bool initShaders();
 
     Chunk chunk;

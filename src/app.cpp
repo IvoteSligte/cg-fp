@@ -43,17 +43,16 @@ void App::initFullScreenQuad()
     // each element is 2 times GL_FLOAT since each vec2 is two GL_FLOATs
     glVertexAttribPointer(posAttr, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(posAttr);
-    // TODO: usage hint GL_STATIC_DRAW
 }
 
-void App::initChunkBuffer()
+void App::initChunk()
 {
+    chunk.init();
     glGenBuffers(1, &storageBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
     assert(glIsBuffer(storageBuffer));
     glNamedBufferStorage(storageBuffer, sizeof(chunk), chunk.voxels, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
-    // TODO: usage hint GL_DYNAMIC_DRAW
 }
 
 bool App::initShaders()
@@ -83,7 +82,6 @@ bool App::initShaders()
 
 bool App::init(uint width, uint height)
 {
-    chunk.init();
     initRandomDirections();
     camera = Camera { glm::vec3(CHUNK_SIZE) / 2.0f, width, height };
 
@@ -91,12 +89,15 @@ bool App::init(uint width, uint height)
     // TODO: error handling (with glIsBuffers for buffers)
 
     // --- ensure opengl version 4.3 is used ---
-    // TODO: ^^^ and exit with a nice error on failure instead of assert
-    assert(GLEW_ARB_shading_language_include);
+    if (!GLEW_VERSION_4_3) {
+        std::cerr << "OpenGL version 4.3 is not installed or supported on this computer.\n"
+                  << "This application needs it for compute shader support." << std::endl;
+        return false;
+    }
 
-    setupDebugInfo(); // TEMP commented out
+    setupDebugInfo();
     initFullScreenQuad();
-    initChunkBuffer();
+    initChunk();
     if (!initShaders())
         return false;
 

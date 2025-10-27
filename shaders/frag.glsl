@@ -24,7 +24,6 @@ vec3 toSRGB(vec3 linear) {
 void main() {
     vec2 screenPos = (fragPos * 2.0 - 1.0) * vec2(aspectRatio, 1.0);
     vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, -1.0));
-    // TODO: just set position of character to CHUNK_WIDTH/2
     Ray ray = Ray(position, direction);
 
     // camera is outside chunk

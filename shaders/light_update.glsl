@@ -14,11 +14,6 @@ layout(location = 1) uniform uint frameNumber;
 // vec4 for randomDirections to ensure 16-byte alignment
 layout(location = 2) uniform vec4 randomDirections[RANDOM_DIRECTION_COUNT];
 
-// uses integer rounding to calculate the uint modulo `n mod m`
-uint umod(uint n, uint m) {
-    return n - (n / m) * m;
-}
-
 // TODO: energy preservation or falloff term
 // TODO: specular and translucent surfaces?
 
@@ -31,7 +26,6 @@ void main() {
         return;
     }
     if (voxel.emission != vec3(0.0)) {
-        // TODO: do not early exit and just add to color, also preserve energy
         for (uint face = 0; face < 6; face++) {
             setColor(index, face, voxel.emission);
         }
@@ -48,8 +42,6 @@ void main() {
         faceColor[face] = vec3(0.0);
         faceSamples[face] = 0;
     }
-
-    // FIXME: weird light falloff based on distance?
 
     for (int i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
         vec3 direction = randomDirections[i].xyz;
