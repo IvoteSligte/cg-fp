@@ -12,6 +12,15 @@ layout(location = 1) uniform vec3 position;
 layout(location = 2) uniform mat3 rotation;
 layout(location = 3) uniform float aspectRatio;
 
+// Maps Linear RGB to sRGB
+// By Tynach from https://gamedev.stackexchange.com/questions/92015/optimized-linear-to-srgb-glsl
+vec3 toSRGB(vec3 linear) {
+    bvec3 cutoff = lessThan(linear, vec3(0.0031308));
+    vec3 higher = vec3(1.055)*pow(linear, vec3(1.0/2.4)) - vec3(0.055);
+    vec3 lower = linear * vec3(12.92);
+    return mix(higher, lower, cutoff);
+}
+
 void main() {
     vec2 screenPos = (fragPos * 2.0 - 1.0) * vec2(aspectRatio, 1.0);
     vec3 direction = rotation * normalize(vec3(screenPos.x, screenPos.y, -1.0));
@@ -33,5 +42,5 @@ void main() {
     } else {
         color = SKY_COLOR;
     }
-    fragColor = vec4(color, 1.0);
+    fragColor = vec4(toSRGB(color), 1.0);
 }

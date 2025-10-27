@@ -135,7 +135,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     };
     const Voxel CUBE = Voxel {
         .emission = glm::vec3(),
-        .diffuse = glm::vec3(0.9f),
+        .diffuse = glm::vec3(0.95f),
         .dbFaceColor = {},
         .flags = 1u,
     };
@@ -155,7 +155,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     glm::uvec3 cube1max = cube1min + glm::uvec3(N / 6, N / 2, N / 5);
     glm::uvec3 cube2min = glm::uvec3(N - N / 2, 1, N / 3);
     glm::uvec3 cube2max = cube2min + glm::uvec3(N / 5, N / 4, N / 5);
-    uint max = N - 1;
+    glm::uint max = N - 1;
 
     if (point.x == 0) {
         return RED_WALL;
@@ -163,9 +163,9 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     if (point.x == max) {
         return GREEN_WALL;
     }
-    if (point.y == max
-        && abs(point.x - N / 2) < lightHalfWidth
-        && abs(point.z - N / 2) < lightHalfWidth) {
+    if (point.y == lightPosition.y
+        && abs(int(point.x) - int(lightPosition.x)) < lightHalfWidth
+        && abs(int(point.z) - int(lightPosition.z)) < lightHalfWidth) {
         return LIGHT;
     }
     if (point.y == 0 || point.z == 0 || point.y == max || point.z == max) {

@@ -65,7 +65,7 @@ void main() {
             // TODO: proper skybox or sky color function
             continue;
         }
-        // fix light leaking through 2+ voxel thick walls
+        // fixes light leaking through 2+ voxel thick walls
         if (isSolid(getVoxel(ivec3(position)))) {
             continue;
         }
@@ -80,7 +80,7 @@ void main() {
         faceColor[face] += weight * getColor(getVoxel(rayCast.voxelIndex), rayCast.face) * voxel.diffuse;
         faceSamples[face] += 1;
     }
-    float blendFactor = max(1.0 / (frameNumber + 1.0), 1e-4);
+    float blendFactor = max(1.0 / (frameNumber + 1.0), 1e-3);
 
     for (int face = 0; face < 6; face++) {
         uint samples = faceSamples[face];
