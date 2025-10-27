@@ -66,32 +66,14 @@ bool isOutOfBounds(ivec3 position) {
     return any(lessThan(position, ivec3(0))) || any(greaterThanEqual(position, ivec3(CHUNK_SIZE)));
 }
 
-// Returns outDirection snapped to the nearest voxel face.
-vec3 voxelNormal(vec3 outDirection) {
-    vec3 dir = abs(outDirection);
-    // normal is that of one of six faces, of three dimensions (d)
-    int d = 2;
-    if (dir.x > dir.y) {
-        if (dir.x > dir.z) d = 0;
-    } else {
-        if (dir.y > dir.z) d = 1;
-    }
-    vec3 norm = vec3(0.0);
-    norm[d] = sign(outDirection)[d];
-    return norm;
-}
-
-// Returns an integer representing the face of a voxel based on the normal.
-uint faceVoxelNormal(vec3 outDirection) {
-    vec3 dir = abs(outDirection);
-    // normal is that of one of six faces, of three dimensions (d)
-    int d = 2;
-    if (dir.x > dir.y) {
-        if (dir.x > dir.z) d = 0;
-    } else {
-        if (dir.y > dir.z) d = 1;
-    }
-    return d * 2 + uint(outDirection[d] > 0);
+// Returns a vec3 representing the normal of a voxel based on its face.
+// NOTE: slower than a lookup table, but also takes way fewer registers.
+vec3 voxelFaceToNormal(uint face) {
+    uint d = face / 2;
+    float sig = ((face & 1) * 2.0) - 1.0;
+    vec3 normal = vec3(0.0);
+    normal[d] = sig;
+    return normal;
 }
 
 // 1.0 / vector, mapping zero-dimensions to 1e30
@@ -144,7 +126,7 @@ RayCast rayCast(Ray ray) {
 
 // uses integer rounding to calculate the uint modulo `n mod m`
 uint umod(uint n, uint m) {
-    return n - (n / m) * m;
+    return n - ((n / m) * m);
 }
 
 // murmurHash14 from https://gist.github.com/mpottinger/54d99732d4831d8137d178b4a6007d1a
