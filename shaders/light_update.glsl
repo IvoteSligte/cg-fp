@@ -6,7 +6,6 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "common.glsl"
 
 const uint RANDOM_DIRECTION_COUNT = 256;
-const uint RAYS_PER_FRAME = 64;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
@@ -52,13 +51,16 @@ void main() {
 
     // FIXME: weird light falloff based on distance?
 
-    for (int i = 0; i < RAYS_PER_FRAME; i++) {
-        vec3 direction = randomDirections[umod(seed + i, RANDOM_DIRECTION_COUNT)].xyz;
+    for (int i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
+        vec3 direction = randomDirections[i].xyz;
         vec3 normal = voxelNormal(direction);
         uint face = faceVoxelNormal(direction);
-        // using the normal as offset (plus a small epsilon) ensures the ray origin
-        // is not in the same voxel
-        vec3 position = vec3(index) + (normal * 0.5001 + 0.5);
+        // 2D offset on face
+        vec2 offset = vec2(mod(float(seed), 8.0) / 8.0, mod(float(seed / 8), 8.0) / 8.0);
+        // position on face
+        vec3 position = vec3(index)
+            + (normal * 0.5001 + 0.5) // push to face surface
+            + (normal.yzx * offset.x) + (normal.zxy * offset.y); // add offset on face
         Ray ray = Ray(position, direction);
 
         if (isOutOfBounds(ray.origin)) {

@@ -150,7 +150,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     };
 
     glm::uvec3 lightPosition = glm::uvec3(N / 2, N - 1, N / 2);
-    glm::uint lightHalfWidth = N / 8;
+    glm::uint lightHalfWidth = N / 6;
     glm::uvec3 cube1min = glm::uvec3(N / 4, 1, N / 6);
     glm::uvec3 cube1max = cube1min + glm::uvec3(N / 6, N / 2, N / 5);
     glm::uvec3 cube2min = glm::uvec3(N - N / 2, 1, N / 3);
