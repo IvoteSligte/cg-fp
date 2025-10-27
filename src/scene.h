@@ -54,7 +54,7 @@ const long CHUNK_SIZE = 32;
 
 // mirrored with shaders
 const int STORAGE_BUFFER_BINDING = 0;
-const glm::uvec3 WORKGROUP_SIZE = glm::uvec3(8, 8, 8);
+const glm::uvec3 WORKGROUP_SIZE = glm::uvec3(4, 4, 4);
 
 // Scene where an inverted sphere represents the solid voxels and emissive voxels
 // are randomly chosen.
