@@ -11,8 +11,9 @@ void Camera::resize(uint newWidth, uint newHeight)
 void Camera::update(InputState& inputs, float deltaTime)
 {
     const float PI = 3.14159265359f;
+    // TODO: make adjustable through user inputs?
     const float MOVEMENT_SPEED = 0.01;
-    const float ROTATE_SPEED = 0.05;
+    const float ROTATE_SPEED = 0.01;
     float moveDelta = MOVEMENT_SPEED * deltaTime;
     float rotateDelta = ROTATE_SPEED * deltaTime;
 
@@ -23,7 +24,6 @@ void Camera::update(InputState& inputs, float deltaTime)
     glm::mat3 rotation = getRotation();
     glm::vec3 right = rotation[0];
     glm::vec3 forward = -rotation[2];
-    // FIXME: weird snapping when rotating diagonally (=not along pitch or yaw)
 
     // update position
     if (inputs.isHeld(SDLK_w)) {
@@ -38,9 +38,6 @@ void Camera::update(InputState& inputs, float deltaTime)
     if (inputs.isHeld(SDLK_a)) {
         position += -right * moveDelta;
     }
-
-    // std::cout << "Position: " << position << std::endl;
-    // std::cout << "Rotation: " << rotation << std::endl;
 }
 
 glm::vec3 Camera::getPosition()

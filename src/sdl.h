@@ -94,11 +94,11 @@ void SDLState<App>::run()
 
     Uint64 last;
     Uint64 now = SDL_GetPerformanceCounter();
-    bool running = true;
+    bool quit = false;
 
     std::cout << "App started." << std::endl;
 
-    while (running) {
+    while (!quit) {
         // get deltaTime
         last = now;
         now = SDL_GetPerformanceCounter();
@@ -113,7 +113,7 @@ void SDLState<App>::run()
         // clear inputs for start of frame
         // inputs.held.merge(inputs.pressed); // add pressed to held
         inputs.pressed.clear();
-        inputs.mouseDelta = glm::vec2();
+        inputs.mouseDelta = glm::vec2(0.0f);
 
         SDL_Event event;
         // go through all events in the queue
@@ -130,7 +130,7 @@ void SDLState<App>::run()
                 inputs.held.erase(event.key.keysym.sym);
                 break;
             case SDL_MOUSEMOTION:
-                inputs.mouseDelta = glm::vec2((float)event.motion.xrel / width, (float)event.motion.yrel / height) * deltaTime;
+                inputs.mouseDelta += glm::vec2((float)event.motion.xrel / width, (float)event.motion.yrel / height) * deltaTime;
                 break;
             case SDL_WINDOWEVENT_RESIZED:
                 width = event.window.data1;
@@ -138,7 +138,7 @@ void SDLState<App>::run()
                 resized = true;
                 break;
             case SDL_QUIT:
-                running = false;
+                quit = true;
                 break;
             }
         }
