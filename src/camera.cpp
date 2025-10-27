@@ -1,4 +1,5 @@
 #include "camera.h"
+#include <glm/common.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 void Camera::resize(uint newWidth, uint newHeight)
@@ -9,6 +10,7 @@ void Camera::resize(uint newWidth, uint newHeight)
 
 void Camera::update(InputState& inputs, float deltaTime)
 {
+    const float PI = 3.14159265359f;
     const float MOVEMENT_SPEED = 0.01;
     const float ROTATE_SPEED = 0.05;
     float moveDelta = MOVEMENT_SPEED * deltaTime;
@@ -16,6 +18,7 @@ void Camera::update(InputState& inputs, float deltaTime)
 
     // reconstruct rotation
     pitch += -inputs.mouseDelta.y * rotateDelta;
+    pitch = glm::clamp(pitch, -0.5f * PI, 0.5f * PI);
     yaw += -inputs.mouseDelta.x * rotateDelta;
     glm::mat3 rotation = getRotation();
     glm::vec3 right = rotation[0];

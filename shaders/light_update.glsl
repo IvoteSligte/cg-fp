@@ -64,8 +64,8 @@ void main() {
         Ray ray = Ray(position, direction);
 
         if (isOutOfBounds(ray.origin)) {
-            faceColor[face] += SKY_COLOR;
-            faceSamples[face] += 1;
+            // faceColor[face] += SKY_COLOR;
+            // faceSamples[face] += 1;
             continue;
         }
         // fixes light leaking through 2+ voxel thick walls
@@ -75,8 +75,8 @@ void main() {
         RayCast rayCast = rayCast(ray);
 
         if (!rayCast.hit) {
-            faceColor[face] += SKY_COLOR;
-            faceSamples[face] += 1;
+            // faceColor[face] += SKY_COLOR;
+            // faceSamples[face] += 1;
             continue;
         }
         // cos-angle weight for diffuse surfaces
