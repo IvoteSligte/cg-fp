@@ -54,8 +54,8 @@ void main() {
         Ray ray = Ray(position, direction);
 
         if (isOutOfBounds(ray.origin)) {
-            // color += SKY_COLOR;
-            // samples += 1;
+            color += skyColor(ray.direction);
+            samples += 1;
             continue;
         }
         // fixes light leaking through 2+ voxel thick walls
@@ -65,8 +65,8 @@ void main() {
         RayCast rayCast = rayCast(ray);
 
         if (!rayCast.hit) {
-            // color += SKY_COLOR;
-            // samples += 1;
+            color += skyColor(ray.direction);
+            samples += 1;
             continue;
         }
         color += getColor(getVoxel(rayCast.voxelIndex), rayCast.face) * voxel.diffuse;

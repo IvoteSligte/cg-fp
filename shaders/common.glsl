@@ -21,9 +21,6 @@ layout(std430, binding = 0) buffer Chunk {
     Voxel[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE] voxels;
 } chunk;
 
-const vec3 SKY_COLOR = vec3(0.2, 0.2, 0.7);
-const vec3 ERROR_COLOR = vec3(1.0, 0.0, 1.0); // magenta
-
 bool bitFlag(uint flags, uint index) {
     return (flags & (1u << index)) == 1u;
 }
@@ -122,6 +119,14 @@ RayCast rayCast(Ray ray) {
         position[dim] += step[dim];
         t[dim] += delta[dim];
     }
+}
+
+vec3 skyColor(vec3 direction) {
+    float ca = direction.y;
+    vec3 base = mix(vec3(0.5, 0.6, 0.9), vec3(0.1, 0.2, 0.7), pow(max(ca, 0.0), 0.3));
+    vec3 horizon = vec3(0.8, 0.7, 0.1) * pow(1.0 - abs(ca), 40.0);
+    vec3 sun = vec3(1.0, 0.7, 0.1) * pow(max(dot(direction, vec3(0.57735, 0.57735, 0.57735)), 0.0), 32.0);
+    return base + horizon + sun;
 }
 
 // uses integer rounding to calculate the uint modulo `n mod m`

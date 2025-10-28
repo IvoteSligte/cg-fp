@@ -180,6 +180,28 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     return AIR;
 }
 
+inline Voxel outsideScene(glm::uvec3 point)
+{
+    const Voxel GRASS = Voxel {
+        .emission = glm::vec3(),
+        .diffuse = glm::vec3(1.0f),
+        .dbFaceColor = {},
+        .flags = 1u,
+    };
+    const Voxel AIR = Voxel {
+        .flags = 0u,
+    };
+    if (point.y == 0) {
+        return Voxel {
+            .emission = glm::vec3(),
+            .diffuse = glm::vec3(1.0f),
+            .dbFaceColor = {},
+            .flags = 1u,
+        };
+    }
+    return AIR;
+}
+
 // mirrored in frag.glsl
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
@@ -191,7 +213,7 @@ struct Chunk {
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    voxels[x][y][z] = cornellBoxScene(glm::uvec3(x, y, z));
+                    voxels[x][y][z] = outsideScene(glm::uvec3(x, y, z));
                 };
             }
         }

@@ -28,7 +28,8 @@ void main() {
 
     // camera is outside chunk
     if (isOutOfBounds(ray.origin)) {
-        fragColor = vec4(ERROR_COLOR, 1.0);
+        // magenta as error color
+        fragColor = vec4(vec3(1.0, 0.0, 1.0), 1.0);
         return;
     }
     RayCast rayCast = rayCast(ray);
@@ -39,7 +40,7 @@ void main() {
         Voxel hitVoxel = getVoxel(index);
         color = getColor(hitVoxel, rayCast.face);
     } else {
-        color = SKY_COLOR;
+        color = skyColor(ray.direction);
     }
     fragColor = vec4(toSRGB(color), 1.0);
 }
