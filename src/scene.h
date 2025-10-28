@@ -182,19 +182,28 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
 
 inline Voxel outsideScene(glm::uvec3 point)
 {
-    const Voxel GRASS = Voxel {
-        .emission = glm::vec3(),
-        .diffuse = glm::vec3(1.0f),
-        .dbFaceColor = {},
-        .flags = 1u,
-    };
     const Voxel AIR = Voxel {
         .flags = 0u,
     };
     if (point.y == 0) {
+        // grass
         return Voxel {
             .emission = glm::vec3(),
-            .diffuse = glm::vec3(1.0f),
+            .diffuse = glm::vec3(0.2f, 0.9f + randf() * 0.1f, 0.2f),
+            .dbFaceColor = {},
+            .flags = 1u,
+        };
+    }
+    glm::vec3 torusCenter = glm::vec3(CHUNK_SIZE / 2.0f);
+    float torusOuterRadius = CHUNK_SIZE / 3.0f;
+    float torusInnerRadius = CHUNK_SIZE / 18.0f;
+
+    float r = glm::distance(glm::vec2(point.y, point.z), glm::vec2(torusCenter.y, torusCenter.z));
+
+    if (glm::length(glm::vec2(r - torusOuterRadius, abs(point.x - torusCenter.x))) <= torusInnerRadius) {
+        return Voxel {
+            .emission = glm::vec3(0.9f, 0.4f, 0.3f) * 1.3f,
+            .diffuse = glm::vec3(),
             .dbFaceColor = {},
             .flags = 1u,
         };
