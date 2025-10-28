@@ -194,13 +194,14 @@ inline Voxel outsideScene(glm::uvec3 point)
             .flags = 1u,
         };
     }
-    glm::vec3 torusCenter = glm::vec3(CHUNK_SIZE / 2.0f);
-    float torusOuterRadius = CHUNK_SIZE / 3.0f;
-    float torusInnerRadius = CHUNK_SIZE / 18.0f;
+    const uint N = CHUNK_SIZE;
+    glm::vec3 torusCenter = glm::vec3(N / 2.0f, N / 8.0f, N / 2.0f);
+    float torusOuterRadius = N / 3.0f;
+    float torusInnerRadius = N / 18.0f;
 
-    float r = glm::distance(glm::vec2(point.y, point.z), glm::vec2(torusCenter.y, torusCenter.z));
+    float r = glm::distance(glm::vec2(point.x, point.z), glm::vec2(torusCenter.x, torusCenter.z));
 
-    if (glm::length(glm::vec2(r - torusOuterRadius, abs(point.x - torusCenter.x))) <= torusInnerRadius) {
+    if (glm::length(glm::vec2(r - torusOuterRadius, abs(point.y - torusCenter.y))) <= torusInnerRadius) {
         return Voxel {
             .emission = glm::vec3(0.9f, 0.4f, 0.3f) * 1.3f,
             .diffuse = glm::vec3(),
