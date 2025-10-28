@@ -143,7 +143,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
         .flags = 0u,
     };
     const Voxel LIGHT = Voxel {
-        .emission = glm::vec3(5.0f),
+        .emission = glm::vec3(2.0f),
         .diffuse = glm::vec3(0.0),
         .dbFaceColor = {},
         .flags = 1u,
