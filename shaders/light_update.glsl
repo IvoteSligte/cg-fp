@@ -54,7 +54,7 @@ void main() {
         Ray ray = Ray(position, direction);
 
         if (isOutOfBounds(ray.origin)) {
-            color += skyColor(ray.direction);
+            color += skyColor(ray.direction) * voxel.diffuse;
             samples += 1;
             continue;
         }
@@ -65,7 +65,7 @@ void main() {
         RayCast rayCast = rayCast(ray);
 
         if (!rayCast.hit) {
-            color += skyColor(ray.direction);
+            color += skyColor(ray.direction) * voxel.diffuse;
             samples += 1;
             continue;
         }
