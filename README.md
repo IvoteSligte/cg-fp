@@ -1,0 +1,16 @@
+# Computer Graphics Final Project: Voxel Raytraced Radiosity
+
+This repository contains a simple shader-based software renderer that lights the scene using radiosity, with light distribution between patches (faces of voxels) performed through raycasting.
+
+## Required Dependencies
+
+To run this project, cmake 3.14+, OpenGL 4.3+, and GLEW need to be installed.
+
+This project has only been tested on Linux, and the cmake build settings are steered towards it, but there is a small chance it will work on Windows and MacOS as well.
+
+## Usage
+
+There are `build.sh` and `run.sh` scripts provided for Linux.
+
+Alternatively, one can manually run `cmake -S src -B build`, which creates an executable at `build/main`.
+
