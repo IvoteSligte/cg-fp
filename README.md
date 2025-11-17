@@ -14,3 +14,8 @@ There are `build.sh` and `run.sh` scripts provided for Linux.
 
 Alternatively, one can manually run `cmake -S src -B build`, which creates an executable at `build/main`.
 
+## Controls
+
+Move: WASD + mouse
+Switch to next scene: N
+

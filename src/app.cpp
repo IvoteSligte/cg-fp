@@ -122,6 +122,11 @@ bool App::update(InputState& inputs, float deltaTime) {
     // update camera based on user input
     camera.update(inputs, deltaTime);
 
+    if (inputs.isPressed(SDLK_n)) {
+        chunk.nextScene();
+        initChunk();
+    }
+
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 

@@ -9,6 +9,7 @@
 #include <SDL2/SDL_video.h>
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -58,8 +59,7 @@ const glm::uvec3 WORKGROUP_SIZE = glm::uvec3(4, 4, 4);
 
 // Scene where an inverted sphere represents the solid voxels and emissive voxels
 // are randomly chosen.
-inline Voxel invertedSphereScene(glm::uvec3 point)
-{
+inline Voxel invertedSphereScene(glm::uvec3 point) {
     glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
     float radius = (float)CHUNK_SIZE / 2.0 - 1.0;
     return Voxel {
@@ -71,8 +71,7 @@ inline Voxel invertedSphereScene(glm::uvec3 point)
 }
 
 // Scene with a simple central light source and walls against the chunk boundaries.
-inline Voxel simpleScene(glm::uvec3 point)
-{
+inline Voxel simpleScene(glm::uvec3 point) {
     const Voxel WALL = Voxel {
         .emission = glm::vec3(),
         .diffuse = glm::vec3(1.0),
@@ -105,15 +104,13 @@ inline Voxel simpleScene(glm::uvec3 point)
     return AIR;
 }
 
-static inline bool isInCube(glm::uvec3 point, glm::uvec3 cubeMin, glm::uvec3 cubeMax)
-{
+static inline bool isInCube(glm::uvec3 point, glm::uvec3 cubeMin, glm::uvec3 cubeMax) {
     return glm::all(glm::greaterThanEqual(point, cubeMin))
         && glm::all(glm::lessThanEqual(point, cubeMax));
 }
 
 // The Cornell box.
-inline Voxel cornellBoxScene(glm::uvec3 point)
-{
+inline Voxel cornellBoxScene(glm::uvec3 point) {
     const auto N = CHUNK_SIZE;
     const Voxel RED_WALL = Voxel {
         .emission = glm::vec3(),
@@ -180,8 +177,7 @@ inline Voxel cornellBoxScene(glm::uvec3 point)
     return AIR;
 }
 
-inline Voxel outsideScene(glm::uvec3 point)
-{
+inline Voxel outsideScene(glm::uvec3 point) {
     const Voxel AIR = Voxel {
         .flags = 0u,
     };
@@ -212,20 +208,33 @@ inline Voxel outsideScene(glm::uvec3 point)
     return AIR;
 }
 
+static const std::function<Voxel(glm::uvec3)> SCENES[] = {
+    cornellBoxScene,
+    outsideScene,
+    invertedSphereScene,
+    simpleScene,
+};
+
 // mirrored in frag.glsl
 struct Chunk {
     Voxel voxels[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
-    void init()
-    {
+    void init() {
         glm::vec3 center = glm::vec3(CHUNK_SIZE) / 2.0f;
 
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    voxels[x][y][z] = cornellBoxScene(glm::uvec3(x, y, z));
+                    voxels[x][y][z] = SCENES[sceneIndex](glm::uvec3(x, y, z));
                 };
             }
         }
     }
+
+    void nextScene() {
+        sceneIndex = (sceneIndex + 1) % (sizeof(SCENES) / sizeof(SCENES[0]));
+    }
+
+private:
+    size_t sceneIndex = 0;
 };
