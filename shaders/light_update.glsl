@@ -9,10 +9,14 @@ const uint RANDOM_DIRECTION_COUNT = 16;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
+// camera position
+layout(location = 1) uniform vec3 position;
+// camera rotation
+layout(location = 2) uniform mat3 rotation;
 // number of frames since start
-layout(location = 1) uniform uint frameNumber;
+layout(location = 3) uniform uint frameNumber;
 // packed normalized vec3 directions
-layout(location = 2) uniform uint randomDirections[RANDOM_DIRECTION_COUNT];
+layout(location = 4) uniform uint randomDirections[RANDOM_DIRECTION_COUNT];
 
 // TODO: energy preservation or falloff term
 // TODO: specular and translucent surfaces?

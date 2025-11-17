@@ -5,20 +5,17 @@
 #include <glm/geometric.hpp>
 #include <glm/packing.hpp>
 
-void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*)
-{
+void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*) {
     std::cout << "GL: " << message << std::endl;
 }
 
-void setupDebugInfo()
-{
+void setupDebugInfo() {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugCallback, nullptr);
 }
 
-void App::initRandomDirections()
-{
+void App::initRandomDirections() {
     for (size_t i = 0; i < RANDOM_DIRECTION_COUNT; i++) {
         randomDirections[i] = glm::packSnorm4x8(glm::vec4(
             glm::normalize(glm::vec3(
@@ -30,8 +27,7 @@ void App::initRandomDirections()
     }
 }
 
-void App::initFullScreenQuad()
-{
+void App::initFullScreenQuad() {
     glGenVertexArrays(1, &vertexArray);
     glGenBuffers(1, &vertexBuffer);
 
@@ -46,8 +42,7 @@ void App::initFullScreenQuad()
     glEnableVertexAttribArray(posAttr);
 }
 
-void App::initChunk()
-{
+void App::initChunk() {
     chunk.init();
     glGenBuffers(1, &storageBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, storageBuffer);
@@ -56,8 +51,7 @@ void App::initChunk()
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STORAGE_BUFFER_BINDING, storageBuffer);
 }
 
-bool App::initShaders()
-{
+bool App::initShaders() {
     std::cout << "Loading and compiling shaders. This may take a minute." << std::endl;
     // compute shader
     {
@@ -81,8 +75,7 @@ bool App::initShaders()
     return true;
 }
 
-bool App::init(uint width, uint height)
-{
+bool App::init(uint width, uint height) {
     initRandomDirections();
     camera = Camera { glm::vec3(CHUNK_SIZE) / 2.0f, width, height };
 
@@ -107,14 +100,12 @@ bool App::init(uint width, uint height)
     return true;
 }
 
-void App::resize(uint newWidth, uint newHeight)
-{
+void App::resize(uint newWidth, uint newHeight) {
     glViewport(0, 0, newWidth, newHeight);
     camera.resize(newWidth, newHeight);
 }
 
-void App::destroy()
-{
+void App::destroy() {
     voxelProgram.destroy();
     renderProgram.destroy();
     if (vertexBuffer)
@@ -125,8 +116,7 @@ void App::destroy()
         glDeleteBuffers(1, &storageBuffer);
 }
 
-bool App::update(InputState& inputs, float deltaTime)
-{
+bool App::update(InputState& inputs, float deltaTime) {
     // recalculate random directions to reduce direction bias
     initRandomDirections();
     // update camera based on user input
@@ -135,9 +125,14 @@ bool App::update(InputState& inputs, float deltaTime)
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glm::vec3 position = camera.getPosition();
+    glm::mat3 rotation = glm::inverse(camera.getRotation());
+
     {
         voxelProgram.use();
         glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
+        glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(position));
+        glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(rotation));
         glUniform1ui(voxelProgram.getUniformLocation("frameNumber"), frameNumber);
         glUniform1uiv(voxelProgram.getUniformLocation("randomDirections"), RANDOM_DIRECTION_COUNT, randomDirections);
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);
@@ -151,8 +146,8 @@ bool App::update(InputState& inputs, float deltaTime)
     {
         renderProgram.use();
         glUniform1ui(renderProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
-        glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(camera.getPosition()));
-        glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(glm::inverse(camera.getRotation())));
+        glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(position));
+        glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(rotation));
         glUniform1f(renderProgram.getUniformLocation("aspectRatio"), camera.getAspectRatio());
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }

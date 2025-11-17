@@ -67,7 +67,7 @@ bool isOutOfBounds(ivec3 position) {
 // NOTE: slower than a lookup table, but also takes way fewer registers.
 vec3 voxelFaceToNormal(uint face) {
     uint d = face / 2;
-    float sig = ((face & 1) * 2.0) - 1.0;
+    float sig = ((face & 1u) * 2.0) - 1.0;
     vec3 normal = vec3(0.0);
     normal[d] = sig;
     return normal;
