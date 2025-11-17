@@ -223,7 +223,7 @@ struct Chunk {
         for (uint32_t x = 0; x < CHUNK_SIZE; x++) {
             for (uint32_t y = 0; y < CHUNK_SIZE; y++) {
                 for (uint32_t z = 0; z < CHUNK_SIZE; z++) {
-                    voxels[x][y][z] = outsideScene(glm::uvec3(x, y, z));
+                    voxels[x][y][z] = cornellBoxScene(glm::uvec3(x, y, z));
                 };
             }
         }
