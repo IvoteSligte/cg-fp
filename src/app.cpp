@@ -131,8 +131,7 @@ bool App::update(InputState& inputs, float deltaTime) {
     {
         voxelProgram.use();
         glUniform1ui(voxelProgram.getUniformLocation("dbColorReadIdx"), dbColorReadIdx);
-        glUniform3fv(renderProgram.getUniformLocation("position"), 1, glm::value_ptr(position));
-        glUniformMatrix3fv(renderProgram.getUniformLocation("rotation"), 1, true, glm::value_ptr(rotation));
+        glUniform3fv(voxelProgram.getUniformLocation("cameraPosition"), 1, glm::value_ptr(position));
         glUniform1ui(voxelProgram.getUniformLocation("frameNumber"), frameNumber);
         glUniform1uiv(voxelProgram.getUniformLocation("randomDirections"), RANDOM_DIRECTION_COUNT, randomDirections);
         glDispatchCompute(WORKGROUP_SIZE.x, WORKGROUP_SIZE.y, WORKGROUP_SIZE.z);

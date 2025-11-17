@@ -55,6 +55,8 @@ struct RayCast {
     uint face;
 };
 
+const RayCast RAYCAST_MISS = RayCast(false, vec3(0.0), ivec3(0), 0);
+
 bool isOutOfBounds(vec3 position) {
     return any(lessThan(position, vec3(0.0))) || any(greaterThanEqual(position, vec3(CHUNK_SIZE)));
 }
@@ -101,7 +103,7 @@ RayCast rayCast(Ray ray) {
         // for negative values
         ivec3 index = ivec3(floor(position));
         if (isOutOfBounds(index)) {
-            return RayCast(false, vec3(0.0), ivec3(0), 0);
+            return RAYCAST_MISS;
         }
         if (isSolid(getVoxel(index))) {
             // step[dim] < 0 instead of step[dim] > 0

@@ -6,20 +6,42 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "common.glsl"
 
 const uint RANDOM_DIRECTION_COUNT = 16;
+const float CAMERA_SPHERE_RADIUS = 5.0;
 
 // NOTE: location = 0 is already taken by dbColorReadIdx in common.glsl
 
 // camera position
-layout(location = 1) uniform vec3 position;
-// camera rotation
-layout(location = 2) uniform mat3 rotation;
+layout(location = 1) uniform vec3 cameraPosition;
 // number of frames since start
-layout(location = 3) uniform uint frameNumber;
+layout(location = 2) uniform uint frameNumber;
 // packed normalized vec3 directions
-layout(location = 4) uniform uint randomDirections[RANDOM_DIRECTION_COUNT];
+layout(location = 3) uniform uint randomDirections[RANDOM_DIRECTION_COUNT];
 
-// TODO: energy preservation or falloff term
-// TODO: specular and translucent surfaces?
+struct Sphere {
+    vec3 center;
+    float radius;
+};
+
+struct RayIntersect {
+    bool hit;
+    float distance;
+};
+
+RayIntersect raySphereIntersect(Ray ray, Sphere sphere) {
+    vec3 d = ray.direction;
+    vec3 p = ray.origin - sphere.center;    // relative position
+    float r = sphere.radius;
+    float dp = dot(d, p);
+    float pp = dot(p, p);
+    float DD = dp * dp - (pp - r * r); // determinant squared
+    // either sqrt(DD) is undefined or the far line intersection is behind the origin
+    if (DD < 0.0 || -dp + sqrt(DD) < 0.0) {
+        return RayIntersect(false, 0.0); // miss
+    }
+    // 0.0 if ray origin is inside the sphere
+    float dist = 2.0 * max(0.0, -dp - sqrt(DD));
+    return RayIntersect(true, dist);
+}
 
 void main() {
     ivec3 index = ivec3(gl_GlobalInvocationID);
@@ -70,6 +92,12 @@ void main() {
 
         if (!rayCast.hit) {
             color += skyColor(ray.direction) * voxel.diffuse;
+            samples += 1;
+            continue;
+        }
+        RayIntersect rayIntersect = raySphereIntersect(ray, Sphere(cameraPosition, CAMERA_SPHERE_RADIUS));
+        if (rayIntersect.hit) {
+            // assuming that the camera sphere is a black void
             samples += 1;
             continue;
         }
