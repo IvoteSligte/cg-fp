@@ -16,8 +16,15 @@ add_executable(main
   shader.cpp
 )
 
-find_package(glm CONFIG REQUIRED)
+# fetch GLM
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG 	0af55ccecd98d4e5a8d1fad7de25ba429d60e863 #refs/tags/1.0.1
+)
+FetchContent_MakeAvailable(glm)
 
+# fetch GLM and ensure all necessary features (and some others) are enabled
 set(SDL_SHARED_ENABLED_BY_DEFAULT ON)
 set(SDL_STATIC_ENABLED_BY_DEFAULT OFF)
 set(SDL_VIDEO ON)

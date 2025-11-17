@@ -6,7 +6,6 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
     pkg-config
-    glm
     glew
     cmake
     mesa # for OpenGL
