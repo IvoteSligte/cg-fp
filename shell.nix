@@ -6,10 +6,17 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
     pkg-config
-    SDL2
     glm
     glew
     cmake
     mesa # for OpenGL
+    xorg.libX11
+    xorg.libXrandr
+    xorg.libXinerama
+    xorg.libXcursor
+    xorg.libXi
+    libGL
+    libGLU
+    pkgs.mesa
   ];
 }
