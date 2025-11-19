@@ -7,7 +7,5 @@ SCRIPT_DIR="$(dirname $0)"
 cd "$SCRIPT_DIR"
 
 cmake -S . -B build
-cd build
-make
-cd ..
+cmake --build build --parallel "$(nproc)"
 cp build/main .
