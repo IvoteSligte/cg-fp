@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util.h"
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>

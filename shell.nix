@@ -6,7 +6,6 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
     pkg-config
-    glew
     cmake
     mesa # for OpenGL
     xorg.libX11

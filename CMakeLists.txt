@@ -6,15 +6,18 @@ include(FetchContent)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Enable compile_commands.json generation")
 
 project(main
-  LANGUAGES CXX
+  LANGUAGES CXX C
 )
 
 add_executable(main
-  main.cpp
-  app.cpp
-  camera.cpp
-  shader.cpp
+  src/main.cpp
+  src/app.cpp
+  src/camera.cpp
+  src/shader.cpp
 )
+
+add_library(glad STATIC glad/src/gl.c)
+target_include_directories(glad PUBLIC "glad/include")
 
 # fetch GLM
 FetchContent_Declare(
@@ -24,7 +27,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-# fetch GLM and ensure all necessary features (and some others) are enabled
+# fetch SDL2 and ensure all necessary features (and some others) are enabled
 set(SDL_SHARED_ENABLED_BY_DEFAULT ON)
 set(SDL_STATIC_ENABLED_BY_DEFAULT OFF)
 set(SDL_VIDEO ON)
@@ -43,11 +46,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SDL2)
 
-find_package(glew REQUIRED)
-
+# OpenGL linked through GLAD
 target_link_libraries(main PRIVATE
+  glad
   glm::glm
-  GLEW::GLEW
   SDL2::SDL2
   SDL2::SDL2main
 )
@@ -57,6 +59,6 @@ target_link_libraries(main PRIVATE
 # instead of being relative to the executable
 set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
 target_compile_definitions(main PRIVATE
-  PROJECT_ROOT=\"${PROJECT_ROOT}/../\"
+  PROJECT_ROOT=\"${PROJECT_ROOT}\"
 )
 

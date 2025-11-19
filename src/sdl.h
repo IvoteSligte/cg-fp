@@ -1,7 +1,7 @@
 #pragma once
 
 #include "input.h"
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <SDL2/SDL.h>
 #include <iostream>
 
@@ -58,9 +58,8 @@ bool SDLState<App>::init()
         logSDLError("Failed to create GL context.");
         return false;
     }
-    // glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to init GLEW." << std::endl;
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+        std::cerr << "Failed to init GLAD." << std::endl;
         return false;
     }
     std::cout << "Initialization finished.\n"

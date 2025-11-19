@@ -80,10 +80,9 @@ bool App::init(uint width, uint height) {
     camera = Camera { glm::vec3(CHUNK_SIZE) / 2.0f, width, height };
 
     std::cout << "Initializing OpenGL." << std::endl;
-    // TODO: error handling (with glIsBuffers for buffers)
 
     // --- ensure opengl version 4.3 is used ---
-    if (!GLEW_VERSION_4_3) {
+    if (!GL_VERSION_4_3) {
         std::cerr << "OpenGL version 4.3 is not installed or supported on this computer.\n"
                   << "This application needs it for compute shader support." << std::endl;
         return false;
