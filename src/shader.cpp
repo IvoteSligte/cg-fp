@@ -115,7 +115,8 @@ bool ShaderProgram::init(
     for (auto attr : attributes) {
         glBindAttribLocation(program, attr.second, attr.first.c_str());
     }
-    std::cout << "Linking shader program." << std::endl;
+    std::cout << "Linking shader program.\n"
+        << "Linking can take several minutes the first time due to shader complexity." << std::endl;
     glLinkProgram(program);
 
     std::cout << "Checking linking status." << std::endl;
