@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Building project. Required pre-installed dependencies: GLEW, OpenGL 4.3 or greater."
+echo "Building project. Required pre-installed dependencies: cmake 3.14, GLEW, OpenGL 4.3 or greater."
 
 SCRIPT_DIR="$(dirname $0)"
 
