@@ -48,9 +48,9 @@ set(SDL_X11_XRANDR ON)
 set(SDL_X11_XSCRNSAVER ON)
 set(SDL_X11_XV ON)
 FetchContent_Declare(
-    SDL2
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-2.30.0
+  SDL2
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG        release-2.30.0
 )
 FetchContent_MakeAvailable(SDL2)
 
