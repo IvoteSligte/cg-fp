@@ -1,6 +1,5 @@
 #pragma once
 
-#include "input.h"
 #include <SDL2/SDL.h>
 #include <glad/gl.h>
 #include <iostream>

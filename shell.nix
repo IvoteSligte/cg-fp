@@ -18,4 +18,9 @@ pkgs.mkShell {
     pkgs.mesa
     python313Packages.jinja2
   ];
+  shellHook = ''
+    export LD_LIBRARY_PATH="\
+      /run/opengl-driver/lib/:\
+      $LD_LIBRARY_PATH"
+  '';
 }

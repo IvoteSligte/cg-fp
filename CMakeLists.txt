@@ -24,8 +24,8 @@ FetchContent_Declare(
     SOURCE_SUBDIR  cmake
 )
 FetchContent_MakeAvailable(glad)
-glad_add_library(glad_gl_core_45 STATIC REPRODUCIBLE LOADER API gl:core=4.5)
-target_link_libraries(main PRIVATE glad_gl_core_45)
+glad_add_library(glad STATIC REPRODUCIBLE LOADER API gl:core=4.5)
+target_link_libraries(main PRIVATE glad)
 
 # fetch GLM
 FetchContent_Declare(
@@ -56,7 +56,7 @@ FetchContent_MakeAvailable(SDL2)
 
 # OpenGL linked through GLAD
 target_link_libraries(main PRIVATE
-  glad_gl_core_45
+  glad
   glm::glm
   SDL2::SDL2
   SDL2::SDL2main
