@@ -4,6 +4,7 @@
 #include "util.h"
 #include <glm/geometric.hpp>
 #include <glm/packing.hpp>
+#include <iostream>
 
 void glDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar* message, const void*) {
     std::cout << "GL: " << message << std::endl;

@@ -16,5 +16,6 @@ pkgs.mkShell {
     libGL
     libGLU
     pkgs.mesa
+    python313Packages.jinja2
   ];
 }

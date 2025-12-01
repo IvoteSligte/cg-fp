@@ -1,8 +1,7 @@
 #include "app.h"
 #include "sdl.h"
 
-int main()
-{
+int main() {
     SDLState<App> sdlState;
 
     if (!sdlState.init())
