@@ -16,14 +16,22 @@ add_executable(main
   src/shader.cpp
 )
 
-add_library(glad STATIC glad/src/gl.c)
-target_include_directories(glad PUBLIC "glad/include")
+# fetch GLAD
+FetchContent_Declare(
+    glad
+    GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+    GIT_TAG        v2.0.8
+    SOURCE_SUBDIR  cmake
+)
+FetchContent_MakeAvailable(glad)
+glad_add_library(glad STATIC REPRODUCIBLE LOADER API gl:core=4.5)
+target_link_libraries(main PRIVATE glad)
 
 # fetch GLM
 FetchContent_Declare(
 	glm
 	GIT_REPOSITORY	https://github.com/g-truc/glm.git
-	GIT_TAG 	0af55ccecd98d4e5a8d1fad7de25ba429d60e863 #refs/tags/1.0.1
+	GIT_TAG 	      1.0.2
 )
 FetchContent_MakeAvailable(glm)
 
@@ -40,9 +48,9 @@ set(SDL_X11_XRANDR ON)
 set(SDL_X11_XSCRNSAVER ON)
 set(SDL_X11_XV ON)
 FetchContent_Declare(
-    SDL2
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-2.30.0
+  SDL2
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG        release-2.30.0
 )
 FetchContent_MakeAvailable(SDL2)
 

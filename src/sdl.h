@@ -1,16 +1,14 @@
 #pragma once
 
-#include "input.h"
-#include <glad/gl.h>
 #include <SDL2/SDL.h>
+#include <glad/gl.h>
 #include <iostream>
 
 // Assumes App has functions init(), update(InputState& inputs, float deltaTime), destroy()
 template <typename App>
 class SDLState {
 public:
-    SDLState()
-    {
+    SDLState() {
     }
 
     // Creates a window and OpenGL context.
@@ -26,15 +24,13 @@ private:
     App app;
 };
 
-inline void logSDLError(std::string msg)
-{
+inline void logSDLError(std::string msg) {
     std::cerr << msg << " Error: " << SDL_GetError() << std::endl;
 }
 
 // Creates a window and OpenGL context.
 template <typename App>
-bool SDLState<App>::init()
-{
+bool SDLState<App>::init() {
     std::cout << "Initializing SDL." << std::endl;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -75,8 +71,7 @@ bool SDLState<App>::init()
 }
 
 template <typename App>
-void SDLState<App>::destroy()
-{
+void SDLState<App>::destroy() {
     app.destroy();
     if (glContext)
         SDL_GL_DeleteContext(glContext);
@@ -86,8 +81,7 @@ void SDLState<App>::destroy()
 }
 
 template <typename App>
-void SDLState<App>::run()
-{
+void SDLState<App>::run() {
     const int FRAME_RATE = 3;
     const float FRAME_TIME = 1.0 / FRAME_RATE;
 
