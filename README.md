@@ -4,8 +4,7 @@ This repository contains a simple shader-based software renderer that lights the
 
 ## Required Dependencies
 
-To run this project, cmake 3.14+ and OpenGL 4.3+ need to be installed.
-OpenGL must have the GL_ARB_storage_buffer and GL_ARB_direct_storage_access extensions, which most hardware does.
+To run this project, cmake 3.14+ and OpenGL 4.5+ need to be installed.
 
 This project has only been tested on Linux, and the cmake build settings are steered towards it, but there is a small chance it will work on Windows and MacOS as well.
 

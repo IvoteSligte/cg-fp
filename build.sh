@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Building project. Requires cmake 3.14 and OpenGL 4.3 or greater."
+echo "Building project. Requires cmake 3.14 and OpenGL 4.5 or greater."
 
 SCRIPT_DIR="$(dirname $0)"
 
