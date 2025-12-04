@@ -21,3 +21,7 @@ The cmake build script takes a while to run as it builds all dependencies, most 
 Move: WASD + mouse
 Switch to next scene: N
 
+## Report
+
+For a more extensive overview of the project, see `report.pdf`.
+
